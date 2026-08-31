@@ -56,8 +56,11 @@
     .symbol-group { cursor: move; }
     .pipe-group { cursor: pointer; }
     .symbol-group.is-selected { outline: 2px dashed #facc15 !important; outline-offset: 4px; }
-    .pipe-group.is-selected .pipe-visible { stroke: #facc15 !important; stroke-width: 4.5px !important; marker-end: url(#arrow-selected) !important; }
-    .pipe-group.is-selected text { fill: #facc15 !important; }
+    
+    /* ESTILOS DE NODOS DE CONTROL PARA TUBERÍAS */
+    .pipe-node { fill: #facc15; stroke: #121217; stroke-width: 2px; cursor: move; display: none; }
+    .pipe-group.is-selected .pipe-node { display: block; }
+    .pipe-group.is-selected .pipe-visible { stroke: #facc15 !important; stroke-width: 4px !important; }
 
     .bom-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000; }
     .bom-content { background: #1e1e2e; padding: 20px; border-radius: 8px; width: 700px; max-width: 95%; max-height: 90vh; border: 1px solid #33334d; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
@@ -129,159 +132,60 @@
     const SVG_NS = "http://www.w3.org/2000/svg";
     
     let isPipeMode = false, pipeType = 'process', pipeStartPoint = null, activePipeGroup = null;
-    let draggingElement = null, selectedTarget = null, offset = { x: 0, y: 0 };
+    let draggingElement = null, draggingNode = null, selectedTarget = null, offset = { x: 0, y: 0 };
 
     function txt(t, y=0, size="10px", color="#ffffff") { return `<text x="0" y="${y}" fill="${color}" font-size="${size}" font-weight="bold" text-anchor="middle" dominant-baseline="central" font-family="sans-serif">${t}</text>`; }
 
-    // --- MEGA BIBLIOTECA COMPLETA (115+ COMPONENTES RESTAURADOS) ---
+    // --- MEGA BIBLIOTECA COMPLETA ---
     const componentLibrary = {
-      // 1. ESTANQUES Y RECIPIENTES
       'tk_vert': { cat: '1. Estanques y Recipientes', name: 'Estanque Vertical', svg: `<rect x="-35" y="-55" width="70" height="110" rx="12" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('TK-101', 0, '11px')}` },
       'tk_horiz': { cat: '1. Estanques y Recipientes', name: 'Estanque Horizontal', svg: `<rect x="-55" y="-30" width="110" height="60" rx="12" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('TK-102', 0, '11px')}` },
       'tk_sphere': { cat: '1. Estanques y Recipientes', name: 'Estanque Esférico', svg: `<circle cx="0" cy="-10" r="35" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -20 15 L -20 35 M 20 15 L 20 35 M -30 35 L 30 35" fill="none" stroke="#fff" stroke-width="2"/>${txt('SP', -10, '11px')}` },
       'tk_roof': { cat: '1. Estanques y Recipientes', name: 'Techo Flotante', svg: `<path d="M -40 -30 L -40 40 L 40 40 L 40 -30" fill="#202230" stroke="#fff" stroke-width="2.5"/><rect x="-35" y="-10" width="70" height="8" fill="#384260" stroke="#fff" stroke-width="2"/>${txt('TK-F', 20, '11px')}` },
       'tk_jacket': { cat: '1. Estanques y Recipientes', name: 'Reactor Enchaquetado', svg: `<rect x="-42" y="-35" width="84" height="80" rx="10" fill="#2d3148" stroke="#38bdf8" stroke-width="2"/><rect x="-32" y="-50" width="64" height="100" rx="8" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('RE', 0, '11px')}` },
-      'tk_gas': { cat: '1. Estanques y Recipientes', name: 'Cilindro de Gas', svg: `<rect x="-15" y="-35" width="30" height="70" rx="10" fill="#202230" stroke="#fff" stroke-width="2.5"/><rect x="-4" y="-42" width="8" height="7" fill="#384260" stroke="#fff" stroke-width="2"/>${txt('GAS')}` },
       'tower': { cat: '1. Estanques y Recipientes', name: 'Torre Destilación', svg: `<rect x="-25" y="-70" width="50" height="140" rx="12" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-20" y1="-30" x2="20" y2="-30" stroke="#94a3b8" stroke-width="2"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#94a3b8" stroke-width="2"/><line x1="-20" y1="30" x2="20" y2="30" stroke="#94a3b8" stroke-width="2"/>${txt('T-101', 55, '11px')}` },
-      'open_vat': { cat: '1. Estanques y Recipientes', name: 'Tina Abierta', svg: `<path d="M -40 -30 L -40 30 L 40 30 L 40 -30" fill="none" stroke="#fff" stroke-width="2.5"/>${txt('VAT', 10, '11px')}` },
       'silo': { cat: '1. Estanques y Recipientes', name: 'Tolva / Silo', svg: `<path d="M -30 -35 L 30 -35 L 30 10 L 10 40 L -10 40 L -30 10 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('SILO', -5, '11px')}` },
-      'clarifier': { cat: '1. Estanques y Recipientes', name: 'Clarificador', svg: `<path d="M -40 -20 L 40 -20 L 20 20 L -20 20 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="0" y1="-20" x2="0" y2="10" stroke="#38bdf8" stroke-width="2"/><line x1="-15" y1="10" x2="15" y2="10" stroke="#38bdf8" stroke-width="2"/>${txt('CL', 30, '11px')}` },
 
-      // 2. EQUIPOS TÉRMICOS
       'hx_tube': { cat: '2. Equipos Térmicos', name: 'Tubos y Coraza', svg: `<rect x="-45" y="-20" width="90" height="40" rx="10" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -35 0 C -15 -20, -15 20, 0 0 C 15 -20, 15 20, 35 0" fill="none" stroke="#38bdf8" stroke-width="2.5"/>${txt('E-101', 32, '11px')}` },
-      'hx_circ': { cat: '2. Equipos Térmicos', name: 'Interc. Circular', svg: `<circle cx="0" cy="0" r="25" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -15 -8 L -5 8 L 5 -8 L 15 8" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linejoin="round"/>${txt('E-102', 36, '11px')}` },
       'hx_air': { cat: '2. Equipos Térmicos', name: 'Aeroenfriador', svg: `<rect x="-35" y="-15" width="70" height="30" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M 0 -15 L -12 -30 M 0 -15 L 12 -30 M -18 -30 L 18 -30" fill="none" stroke="#38bdf8" stroke-width="2.5"/>${txt('AC', 28, '11px')}` },
-      'hx_plate': { cat: '2. Equipos Térmicos', name: 'Interc. Placas', svg: `<rect x="-25" y="-35" width="50" height="70" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-25" y1="-35" x2="25" y2="35" stroke="#fff" stroke-width="2"/><line x1="-25" y1="35" x2="25" y2="-35" stroke="#fff" stroke-width="2"/>${txt('PHE', 48, '11px')}` },
-      'hx_spiral': { cat: '2. Equipos Térmicos', name: 'Interc. Espiral', svg: `<rect x="-25" y="-25" width="50" height="50" fill="#202230" stroke="#fff" stroke-width="2.5"/><circle cx="0" cy="0" r="15" fill="none" stroke="#38bdf8" stroke-width="2"/><circle cx="0" cy="0" r="8" fill="none" stroke="#38bdf8" stroke-width="2"/>${txt('SP-E', 36, '11px')}` },
-      'hx_double': { cat: '2. Equipos Térmicos', name: 'Tubo Doble', svg: `<rect x="-40" y="-10" width="80" height="20" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-40" y1="0" x2="40" y2="0" stroke="#38bdf8" stroke-width="2"/>${txt('DP-E', 22, '11px')}` },
-      'hx_heater': { cat: '2. Equipos Térmicos', name: 'Calentador (Heater)', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-15" y1="0" x2="15" y2="0" stroke="#f87171" stroke-width="3"/><path d="M 0 0 L 0 -15 M -5 -10 L 0 -15 L 5 -10" fill="none" stroke="#f87171" stroke-width="2"/>${txt('H', 34, '11px')}` },
       'furnace': { cat: '2. Equipos Térmicos', name: 'Horno / Caldera', svg: `<path d="M -30 40 L -30 10 L -12 -20 L -12 -50 L 12 -50 L 12 -20 L 30 10 L 30 40 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('F-101', 20, '11px')}` },
 
-      // 3. SÓLIDOS Y SEPARACIÓN
       'filter': { cat: '3. Sólidos y Separación', name: 'Filtro Genérico', svg: `<rect x="-20" y="-20" width="40" height="40" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-20" y1="20" x2="20" y2="-20" stroke="#fff" stroke-width="2.5"/>${txt('F-101', 32, '11px')}` },
-      'flt_bag': { cat: '3. Sólidos y Separación', name: 'Filtro de Bolsa', svg: `<rect x="-15" y="-25" width="30" height="50" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -15 -10 L 0 15 L 15 -10" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="3,3"/>${txt('BF', 36, '11px')}` },
-      'flt_hepa': { cat: '3. Sólidos y Separación', name: 'Filtro HEPA', svg: `<rect x="-20" y="-25" width="40" height="50" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -20 -10 L 0 15 L 20 -10" fill="none" stroke="#fff" stroke-width="2"/><line x1="-20" y1="-10" x2="20" y2="-10" stroke="#fff" stroke-width="2"/>${txt('HEPA', 0, '9px', '#38bdf8')}` },
-      'flt_ion': { cat: '3. Sólidos y Separación', name: 'Interc. Iónico', svg: `<rect x="-18" y="-25" width="36" height="50" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-18" y1="-10" x2="18" y2="-10" stroke="#fff" stroke-width="2" stroke-dasharray="4,2"/><line x1="-18" y1="10" x2="18" y2="10" stroke="#fff" stroke-width="2" stroke-dasharray="4,2"/>${txt('ION', 0, '10px', '#38bdf8')}` },
-      'flt_bio': { cat: '3. Sólidos y Separación', name: 'Bio-Filtro', svg: `<rect x="-18" y="-25" width="36" height="50" fill="#202230" stroke="#fff" stroke-width="2.5"/><circle cx="-6" cy="0" r="4" fill="none" stroke="#4ade80" stroke-width="2"/><circle cx="6" cy="0" r="4" fill="none" stroke="#4ade80" stroke-width="2"/>${txt('BIO', 36, '10px')}` },
       'centrifuge': { cat: '3. Sólidos y Separación', name: 'Centrífuga', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -22 0 L 22 0 M -12 0 L 0 -12 L 0 12 L 12 0" fill="none" stroke="#38bdf8" stroke-width="2.5"/>${txt('CF-101', 34, '11px')}` },
       'cyclone': { cat: '3. Sólidos y Separación', name: 'Ciclón Separador', svg: `<path d="M -25 -35 L 25 -35 L 25 0 L 0 40 L -25 0 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('S-101', -10, '11px')}` },
-      'hydrocyclone': { cat: '3. Sólidos y Separación', name: 'Hidrociclón', svg: `<path d="M -15 -30 L 15 -30 L 15 -10 L 0 30 L -15 -10 Z" fill="#202230" stroke="#38bdf8" stroke-width="2.5"/>${txt('HC', -10, '11px')}` },
-      'decanter': { cat: '3. Sólidos y Separación', name: 'Decantador', svg: `<polygon points="-30,-15 30,-15 15,15 -15,15" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-15" y1="15" x2="15" y2="15" stroke="#38bdf8" stroke-width="2"/>${txt('DEC', 26, '11px')}` },
 
-      // 4. TRATAMIENTO DE SÓLIDOS
-      'crush_jaw': { cat: '4. Tratamiento Sólidos', name: 'Trituradora Mandíb.', svg: `<polygon points="-25,-20 25,-20 15,20 -15,20" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-15" y1="-20" x2="-5" y2="15" stroke="#ef4444" stroke-width="3"/>${txt('J-CR', 32, '11px')}` },
-      'crush_cone': { cat: '4. Tratamiento Sólidos', name: 'Trituradora Cono', svg: `<polygon points="-25,-20 25,-20 15,20 -15,20" fill="#202230" stroke="#fff" stroke-width="2.5"/><polygon points="0,-10 -10,15 10,15" fill="none" stroke="#ef4444" stroke-width="2"/>${txt('C-CR', 32, '11px')}` },
-      'crush_roll': { cat: '4. Tratamiento Sólidos', name: 'Trituradora Rodillos', svg: `<polygon points="-25,-20 25,-20 15,20 -15,20" fill="#202230" stroke="#fff" stroke-width="2.5"/><circle cx="-7" cy="0" r="6" fill="none" stroke="#ef4444" stroke-width="2"/><circle cx="7" cy="0" r="6" fill="none" stroke="#ef4444" stroke-width="2"/>${txt('R-CR', 32, '11px')}` },
-      'dryer': { cat: '4. Tratamiento Sólidos', name: 'Secador Rotativo', svg: `<polygon points="-15,-25 15,-25 25,-15 25,35 -25,35 -25,-15" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('DRY', 5, '11px')}` },
-      'feeder_rot': { cat: '4. Tratamiento Sólidos', name: 'Alimentador Estrella', svg: `<circle cx="0" cy="0" r="20" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -20 0 L 20 0 M 0 -20 L 0 20 M -14 -14 L 14 14" fill="none" stroke="#fff" stroke-width="2"/>${txt('FD-101', 32, '11px')}` },
-      'feeder_screw': { cat: '4. Tratamiento Sólidos', name: 'Alimentador Sinfín', svg: `<rect x="-30" y="-10" width="60" height="20" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -30 -10 L -20 10 L -10 -10 L 0 10 L 10 -10 L 20 10 L 30 -10" fill="none" stroke="#38bdf8" stroke-width="2"/>${txt('SCW', 22, '11px')}` },
-      'conveyor_belt': { cat: '4. Tratamiento Sólidos', name: 'Banda Transport.', svg: `<rect x="-40" y="-6" width="80" height="12" rx="6" fill="#202230" stroke="#fff" stroke-width="2.5"/><circle cx="-32" cy="0" r="4" fill="#38bdf8"/><circle cx="32" cy="0" r="4" fill="#38bdf8"/>${txt('CV', 18, '11px')}` },
-      'conveyor_buck': { cat: '4. Tratamiento Sólidos', name: 'Elevador Capachos', svg: `<rect x="-10" y="-40" width="20" height="80" rx="5" fill="#202230" stroke="#fff" stroke-width="2.5"/><polygon points="-10,-20 -20,-25 -20,-15" fill="#38bdf8"/><polygon points="-10,0 -20,-5 -20,5" fill="#38bdf8"/><polygon points="-10,20 -20,15 -20,25" fill="#38bdf8"/>${txt('ELV', 52, '11px')}` },
+      'p_centrif': { cat: '4. Bombas y Motores', name: 'Centrífuga', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -16 -10 L 14 0 L -16 10 Z" fill="none" stroke="#fff" stroke-width="2"/>${txt('P-101', 34, '11px')}` },
+      'p_pos': { cat: '4. Bombas y Motores', name: 'Desplaz. P.', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M 0 -16 L 0 16 M -16 0 L 16 0" fill="none" stroke="#fff" stroke-width="2"/>${txt('PDP', 34, '11px')}` },
+      'compressor': { cat: '4. Bombas y Motores', name: 'Compresor', svg: `<path d="M -22 -22 L 22 -10 L 22 10 L -22 22 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('C-101', 34, '11px')}` },
+      'motor_ac': { cat: '4. Bombas y Motores', name: 'Motor CA', svg: `<circle cx="0" cy="0" r="20" fill="#1e293b" stroke="#f59e0b" stroke-width="2.5"/>${txt('M', -3, '14px', '#f59e0b')}${txt('M-1', 32, '11px')}` },
 
-      // 5. BOMBAS (ISO/DIN)
-      'p_centrif': { cat: '5. Bombas (ISO/DIN)', name: 'Centrífuga', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -16 -10 L 14 0 L -16 10 Z" fill="none" stroke="#fff" stroke-width="2"/>${txt('P-101', 34, '11px')}` },
-      'p_pos': { cat: '5. Bombas (ISO/DIN)', name: 'Desplazamiento P.', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M 0 -16 L 0 16 M -16 0 L 16 0" fill="none" stroke="#fff" stroke-width="2"/>${txt('PDP', 34, '11px')}` },
-      'p_gear': { cat: '5. Bombas (ISO/DIN)', name: 'Engranajes / Lóbulos', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><circle cx="-7" cy="0" r="9" fill="none" stroke="#fff" stroke-width="2"/><circle cx="7" cy="0" r="9" fill="none" stroke="#fff" stroke-width="2"/>${txt('PG', 34, '11px')}` },
-      'p_screw': { cat: '5. Bombas (ISO/DIN)', name: 'Tornillo Sinfín', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -12 0 C -6 -12, 6 12, 12 0" fill="none" stroke="#fff" stroke-width="2.5"/>${txt('PS', 34, '11px')}` },
-      'p_diaph': { cat: '5. Bombas (ISO/DIN)', name: 'Diafragma', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-16" y1="0" x2="16" y2="0" stroke="#fff" stroke-width="2"/><path d="M -10 0 A 10 10 0 0 1 10 0" fill="none" stroke="#38bdf8" stroke-width="2"/>${txt('PD', 34, '11px')}` },
-      'p_vacuum': { cat: '5. Bombas (ISO/DIN)', name: 'Bomba Vacío', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -14 0 L 16 -10 L 16 10 Z" fill="none" stroke="#fff" stroke-width="2"/>${txt('VP-101', 34, '11px')}` },
-      'p_hand': { cat: '5. Bombas (ISO/DIN)', name: 'Bomba Manual', svg: `<circle cx="0" cy="0" r="18" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="0" y1="-18" x2="0" y2="-30" stroke="#fff" stroke-width="2"/><line x1="-10" y1="-30" x2="10" y2="-30" stroke="#fff" stroke-width="3"/>${txt('HP', 28, '11px')}` },
+      'fe_orifice': { cat: '5. Sensores de Flujo', name: 'Placa Orificio', svg: `<line x1="-5" y1="-16" x2="-5" y2="16" stroke="#fff" stroke-width="3"/><line x1="5" y1="-16" x2="5" y2="16" stroke="#fff" stroke-width="3"/>${txt('FE', 26, '11px')}` },
+      'fe_venturi': { cat: '5. Sensores de Flujo', name: 'Tubo Venturi', svg: `<path d="M -22 -12 L -6 -5 L 6 -5 L 22 -12 L 22 12 L 6 5 L -6 5 L -22 12 Z" fill="#202230" stroke="#fff" stroke-width="2"/>${txt('FE', 24, '11px')}` },
+      'fe_coriolis': { cat: '5. Sensores de Flujo', name: 'Coriolis', svg: `<rect x="-18" y="-18" width="36" height="36" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -10 -10 C -10 22, 10 22, 10 -10" fill="none" stroke="#38bdf8" stroke-width="2.5"/>${txt('FC', 30, '11px')}` },
 
-      // 6. COMPRESORES Y SOPLADORES
-      'cmp_centrif': { cat: '6. Compresores y Sopladores', name: 'Compresor Centrífugo', svg: `<path d="M -22 -22 L 22 -10 L 22 10 L -22 22 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-10" y1="-12" x2="-10" y2="12" stroke="#fff" stroke-width="2"/>${txt('C-101', 34, '11px')}` },
-      'cmp_recip': { cat: '6. Compresores y Sopladores', name: 'Comp. Reciprocante', svg: `<path d="M -22 -22 L 22 -10 L 22 10 L -22 22 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -5 -12 L 5 0 L -5 12" fill="none" stroke="#fff" stroke-width="2"/>${txt('C-REC', 34, '11px')}` },
-      'cmp_rotary': { cat: '6. Compresores y Sopladores', name: 'Comp. Rotativo ISO', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -22 0 A 22 22 0 0 1 22 0" fill="#384260" stroke="#fff" stroke-width="2"/>${txt('C-ROT', 34, '11px')}` },
-      'blower': { cat: '6. Compresores y Sopladores', name: 'Soplador (Blower)', svg: `<circle cx="0" cy="0" r="20" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -10 0 C -10 -15, 10 -15, 10 0 C 10 15, -10 15, -10 0" fill="none" stroke="#38bdf8" stroke-width="2"/>${txt('BL', 32, '11px')}` },
-      'fan': { cat: '6. Compresores y Sopladores', name: 'Ventilador Extractor', svg: `<circle cx="0" cy="0" r="20" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M 0 0 L 0 -15 M 0 0 L -12 8 M 0 0 L 12 8" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>${txt('FAN', 32, '11px')}` },
-      'turbine': { cat: '6. Compresores y Sopladores', name: 'Turbina Vapor/Gas', svg: `<path d="M -22 -10 L 22 -22 L 22 22 L -22 10 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('TURB', 34, '11px')}` },
+      'vlv_gate': { cat: '6. Válvulas Manuales', name: 'Compuerta', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><line x1="0" y1="0" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('HV', 22, '11px')}` },
+      'vlv_globe': { cat: '6. Válvulas Manuales', name: 'Globo', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><circle cx="0" cy="0" r="4" fill="#fff"/><line x1="0" y1="-4" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('GLV', 22, '11px')}` },
+      'vlv_ball': { cat: '6. Válvulas Manuales', name: 'Bola', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><circle cx="0" cy="0" r="5" fill="#202230" stroke="#fff" stroke-width="2"/><line x1="0" y1="-5" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('BV', 22, '11px')}` },
+      'vlv_butter': { cat: '6. Válvulas Manuales', name: 'Mariposa', svg: `<line x1="-16" y1="0" x2="16" y2="0" stroke="#fff" stroke-width="2.5"/><line x1="-8" y1="-10" x2="8" y2="10" stroke="#38bdf8" stroke-width="3"/>${txt('BFV', 22, '11px')}` },
 
-      // 7. AGITADORES Y MOTORES
-      'motor_ac': { cat: '7. Agitadores y Motores', name: 'Motor CA (M~)', svg: `<circle cx="0" cy="0" r="20" fill="#1e293b" stroke="#f59e0b" stroke-width="2.5"/>${txt('M', -3, '14px', '#f59e0b')}<path d="M -8 8 C -4 4, 4 12, 8 8" fill="none" stroke="#f59e0b" stroke-width="1.5"/>${txt('M-101', 32, '11px')}` },
-      'motor_dc': { cat: '7. Agitadores y Motores', name: 'Motor CC (M-)', svg: `<circle cx="0" cy="0" r="20" fill="#1e293b" stroke="#f59e0b" stroke-width="2.5"/>${txt('M', -3, '14px', '#f59e0b')}<line x1="-8" y1="8" x2="8" y2="8" stroke="#f59e0b" stroke-width="2"/>${txt('M-102', 32, '11px')}` },
-      'generator': { cat: '7. Agitadores y Motores', name: 'Generador (G)', svg: `<circle cx="0" cy="0" r="20" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5"/>${txt('G', 0, '15px', '#38bdf8')}${txt('GEN', 32, '11px')}` },
-      'ag_prop': { cat: '7. Agitadores y Motores', name: 'Agitador Hélice', svg: `<rect x="-8" y="-30" width="16" height="12" fill="#1e293b" stroke="#fff" stroke-width="2"/><line x1="0" y1="-18" x2="0" y2="20" stroke="#fff" stroke-width="2.5"/><path d="M -15 15 L 0 20 L -15 25 Z M 15 15 L 0 20 L 15 25 Z" fill="#38bdf8" stroke="#fff" stroke-width="1.5"/>${txt('AG', 35, '11px')}` },
-      'ag_anchor': { cat: '7. Agitadores y Motores', name: 'Agitador Ancla', svg: `<rect x="-8" y="-35" width="16" height="12" fill="#1e293b" stroke="#fff" stroke-width="2"/><line x1="0" y1="-23" x2="0" y2="25" stroke="#fff" stroke-width="2.5"/><path d="M -20 10 L -20 25 L 20 25 L 20 10" fill="none" stroke="#38bdf8" stroke-width="3"/>` },
-      'ag_turbine': { cat: '7. Agitadores y Motores', name: 'Agitador Turbina', svg: `<rect x="-8" y="-30" width="16" height="12" fill="#1e293b" stroke="#fff" stroke-width="2"/><line x1="0" y1="-18" x2="0" y2="20" stroke="#fff" stroke-width="2.5"/><rect x="-15" y="15" width="30" height="10" fill="none" stroke="#38bdf8" stroke-width="2"/><line x1="-5" y1="15" x2="-5" y2="25" stroke="#38bdf8" stroke-width="2"/><line x1="5" y1="15" x2="5" y2="25" stroke="#38bdf8" stroke-width="2"/>` },
-      'ag_paddle': { cat: '7. Agitadores y Motores', name: 'Agitador Paletas', svg: `<rect x="-8" y="-30" width="16" height="12" fill="#1e293b" stroke="#fff" stroke-width="2"/><line x1="0" y1="-18" x2="0" y2="20" stroke="#fff" stroke-width="2.5"/><line x1="-15" y1="10" x2="15" y2="10" stroke="#38bdf8" stroke-width="3"/><line x1="-15" y1="20" x2="15" y2="20" stroke="#38bdf8" stroke-width="3"/>` },
+      'vlv_check': { cat: '7. Válvulas Auto/Seg.', name: 'Check', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><circle cx="-5" cy="0" r="3" fill="#38bdf8"/>${txt('CK', 22, '11px')}` },
+      'vlv_relief': { cat: '7. Válvulas Auto/Seg.', name: 'Alivio (PSV)', svg: `<path d="M -16 0 L 0 0 L 0 16 Z M -16 0 L -16 16 L 0 16 Z" fill="#384260" stroke="#fff" stroke-width="2"/>${txt('PSV', 28, '11px')}` },
+      'act_diaph': { cat: '7. Válvulas Auto/Seg.', name: 'Control Neum.', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><line x1="0" y1="0" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><path d="M -14 -22 A 14 14 0 0 1 14 -22 Z" fill="#202230" stroke="#38bdf8" stroke-width="2"/>${txt('FCV', 22, '11px')}` },
 
-      // 8. SENSORES DE FLUJO
-      'fe_orifice': { cat: '8. Sensores de Flujo', name: 'Placa Orificio (FE)', svg: `<line x1="-5" y1="-16" x2="-5" y2="16" stroke="#fff" stroke-width="3"/><line x1="5" y1="-16" x2="5" y2="16" stroke="#fff" stroke-width="3"/>${txt('FE-101', 26, '11px')}` },
-      'fe_venturi': { cat: '8. Sensores de Flujo', name: 'Tubo Venturi', svg: `<path d="M -22 -12 L -6 -5 L 6 -5 L 22 -12 L 22 12 L 6 5 L -6 5 L -22 12 Z" fill="#202230" stroke="#fff" stroke-width="2"/>${txt('FE', 24, '11px')}` },
-      'fe_pitot': { cat: '8. Sensores de Flujo', name: 'Tubo Pitot', svg: `<line x1="0" y1="-15" x2="0" y2="10" stroke="#fff" stroke-width="2.5"/><line x1="0" y1="10" x2="-8" y2="10" stroke="#fff" stroke-width="2.5"/>${txt('PITOT', 24, '11px')}` },
-      'fe_coriolis': { cat: '8. Sensores de Flujo', name: 'Coriolis', svg: `<rect x="-18" y="-18" width="36" height="36" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -10 -10 C -10 22, 10 22, 10 -10" fill="none" stroke="#38bdf8" stroke-width="2.5"/>${txt('FC', 30, '11px')}` },
-      'fe_vortex': { cat: '8. Sensores de Flujo', name: 'Vortex', svg: `<rect x="-18" y="-18" width="36" height="36" fill="#202230" stroke="#fff" stroke-width="2.5"/><polygon points="0,-8 8,0 0,8 -8,0" fill="none" stroke="#38bdf8" stroke-width="2"/>${txt('VX', 30, '11px')}` },
-      'fe_ultra': { cat: '8. Sensores de Flujo', name: 'Ultrasónico', svg: `<rect x="-18" y="-18" width="36" height="36" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -10 -4 Q -5 -8, 0 -4 T 10 -4 M -10 4 Q -5 0, 0 4 T 10 4" fill="none" stroke="#38bdf8" stroke-width="2"/>${txt('US', 30, '11px')}` },
-      'fe_mag': { cat: '8. Sensores de Flujo', name: 'Magnético', svg: `<rect x="-16" y="-16" width="32" height="32" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('M', 0, '14px', '#38bdf8')}${txt('FE-M', 28, '11px')}` },
-      'fi_rotam': { cat: '8. Sensores de Flujo', name: 'Rotámetro (FI)', svg: `<path d="M -12 -20 L 12 -20 L 6 20 L -6 20 Z" fill="#202230" stroke="#fff" stroke-width="2.2"/><circle cx="0" cy="0" r="4" fill="#38bdf8"/>${txt('FI', 32, '11px')}` },
-      'fe_turbine': { cat: '8. Sensores de Flujo', name: 'Turbina Sensor', svg: `<rect x="-16" y="-16" width="32" height="32" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -8 -8 L 8 8 M -8 8 L 8 -8" fill="none" stroke="#38bdf8" stroke-width="2"/>${txt('TUR', 30, '11px')}` },
-      'fe_target': { cat: '8. Sensores de Flujo', name: 'Target (Blanco)', svg: `<rect x="-16" y="-16" width="32" height="32" fill="#202230" stroke="#fff" stroke-width="2.5"/><circle cx="0" cy="0" r="6" fill="#38bdf8"/>${txt('TGT', 30, '11px')}` },
+      'acc_trap': { cat: '8. Accesorios y Sensores', name: 'Trampa Vapor', svg: `<rect x="-14" y="-14" width="28" height="28" fill="#202230" stroke="#fff" stroke-width="2"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#fff" stroke-width="2"/>${txt('T', 0, '12px')}` },
+      'sens_temp': { cat: '8. Accesorios y Sensores', name: 'Termopozo (TE)', svg: `<line x1="-12" y1="8" x2="12" y2="8" stroke="#fff" stroke-width="2"/><line x1="0" y1="-15" x2="0" y2="8" stroke="#f87171" stroke-width="2.5"/><circle cx="0" cy="-15" r="4" fill="#f87171"/>${txt('TE', -26, '10px', '#f87171')}` },
+      'sens_press': { cat: '8. Accesorios y Sensores', name: 'Manómetro (PG)', svg: `<circle cx="0" cy="-12" r="14" fill="#161620" stroke="#34d399" stroke-width="2"/><line x1="0" y1="2" x2="0" y2="14" stroke="#fff" stroke-width="2"/>${txt('PG', -12, '10px', '#34d399')}` },
 
-      // 9. VÁLVULAS MANUALES
-      'vlv_gate': { cat: '9. Válvulas Manuales', name: 'Compuerta (Gate)', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><line x1="0" y1="0" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('HV', 22, '11px')}` },
-      'vlv_globe': { cat: '9. Válvulas Manuales', name: 'Globo', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><circle cx="0" cy="0" r="4" fill="#fff"/><line x1="0" y1="-4" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('GLV', 22, '11px')}` },
-      'vlv_ball': { cat: '9. Válvulas Manuales', name: 'Bola (Ball)', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><circle cx="0" cy="0" r="5" fill="#202230" stroke="#fff" stroke-width="2"/><line x1="0" y1="-5" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('BV', 22, '11px')}` },
-      'vlv_plug': { cat: '9. Válvulas Manuales', name: 'Tapón (Plug)', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><polygon points="0,-6 4,0 0,6 -4,0" fill="#202230" stroke="#fff" stroke-width="1.5"/><line x1="0" y1="-6" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('PLV', 22, '11px')}` },
-      'vlv_butter': { cat: '9. Válvulas Manuales', name: 'Mariposa', svg: `<line x1="-16" y1="0" x2="16" y2="0" stroke="#fff" stroke-width="2.5"/><line x1="-8" y1="-10" x2="8" y2="10" stroke="#38bdf8" stroke-width="3"/>${txt('BFV', 22, '11px')}` },
-      'vlv_needle': { cat: '9. Válvulas Manuales', name: 'Aguja', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><path d="M -4 -16 L 4 -16 L 0 0 Z" fill="#fff"/>${txt('NV', 22, '11px')}` },
-      'vlv_diaph': { cat: '9. Válvulas Manuales', name: 'Diafragma Manual', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><line x1="-8" y1="0" x2="8" y2="0" stroke="#fff" stroke-width="2"/><line x1="0" y1="0" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('DV', 22, '11px')}` },
-      'vlv_pinch': { cat: '9. Válvulas Manuales', name: 'Pellizco (Pinch)', svg: `<path d="M -15 -10 L 15 -10 L 15 10 L -15 10 Z" fill="none" stroke="#fff" stroke-width="2"/><path d="M -15 -10 L 0 0 L 15 -10 M -15 10 L 0 0 L 15 10" fill="none" stroke="#38bdf8" stroke-width="2"/>${txt('PV', 22, '11px')}` },
-      'vlv_angle': { cat: '9. Válvulas Manuales', name: 'Ángulo', svg: `<path d="M 0 0 L -14 -9 L -14 9 Z M 0 0 L -9 14 L 9 14 Z" fill="#384260" stroke="#fff" stroke-width="2"/>${txt('AV', 24, '11px')}` },
-      'v_3way': { cat: '9. Válvulas Manuales', name: '3 Vías (3-Way)', svg: `<path d="M -16 -9 L 0 0 L -16 9 Z M 16 -9 L 0 0 L 16 9 Z M -9 16 L 0 0 L 9 16 Z" fill="#384260" stroke="#fff" stroke-width="2"/>${txt('3W', -18, '11px')}` },
-      'v_4way': { cat: '9. Válvulas Manuales', name: '4 Vías', svg: `<path d="M -16 -9 L 0 0 L -16 9 Z M 16 -9 L 0 0 L 16 9 Z M -9 16 L 0 0 L 9 16 Z M -9 -16 L 0 0 L 9 -16 Z" fill="#384260" stroke="#fff" stroke-width="2"/>` },
-
-      // 10. VÁLVULAS AUTO / SEGURIDAD
-      'vlv_check': { cat: '10. Válvulas Autom. / Seg.', name: 'Check (Retención)', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><circle cx="-5" cy="0" r="3" fill="#38bdf8"/>${txt('CK', 22, '11px')}` },
-      'vlv_relief': { cat: '10. Válvulas Autom. / Seg.', name: 'Alivio (PSV)', svg: `<path d="M -16 0 L 0 0 L 0 16 Z M -16 0 L -16 16 L 0 16 Z" fill="#384260" stroke="#fff" stroke-width="2"/>${txt('PSV', 28, '11px')}` },
-      'vlv_prv': { cat: '10. Válvulas Autom. / Seg.', name: 'Reductora Presión', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><line x1="0" y1="0" x2="0" y2="-12" stroke="#fff" stroke-width="2"/><path d="M -10 -12 A 10 10 0 0 1 10 -12" fill="none" stroke="#fff" stroke-width="2"/><line x1="-10" y1="-12" x2="-22" y2="-12" stroke="#fff" stroke-width="1.5" stroke-dasharray="2,2"/>${txt('PRV', 22, '11px')}` },
-      'act_diaph': { cat: '10. Válvulas Autom. / Seg.', name: 'Control Neumática', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><line x1="0" y1="0" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><path d="M -14 -22 A 14 14 0 0 1 14 -22 Z" fill="#202230" stroke="#38bdf8" stroke-width="2"/>${txt('FCV', 22, '11px')}` },
-      'act_motor': { cat: '10. Válvulas Autom. / Seg.', name: 'Motorizada (MOV)', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><line x1="0" y1="0" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><rect x="-9" y="-26" width="18" height="12" fill="#1e293b" stroke="#fff" stroke-width="1.5"/>${txt('M', -20, '8px')}${txt('MOV', 22, '11px')}` },
-      'act_sol': { cat: '10. Válvulas Autom. / Seg.', name: 'Electroválvula (S)', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><rect x="-9" y="-22" width="18" height="13" fill="#1e293b" stroke="#fff" stroke-width="1.5"/>${txt('S', -15, '9px')}${txt('EV', 22, '11px')}` },
-      'act_piston': { cat: '10. Válvulas Autom. / Seg.', name: 'Pistón Neumático', svg: `<rect x="-10" y="-30" width="20" height="20" fill="#202230" stroke="#38bdf8" stroke-width="2"/><line x1="0" y1="-10" x2="0" y2="0" stroke="#fff" stroke-width="2.5"/><path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/>${txt('PV', 22, '11px')}` },
-      'act_vsd': { cat: '10. Válvulas Autom. / Seg.', name: 'Variador VSD (2024)', svg: `<rect x="-20" y="-15" width="40" height="30" fill="#1e293b" stroke="#ffffff" stroke-width="2"/>${txt('VSD', 0, '12px')}` },
-      'vlv_orifice_plug': { cat: '10. Válvulas Autom. / Seg.', name: 'Orificio Restrictor (2024)', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><circle cx="0" cy="0" r="3" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="0" y1="-3" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('FO', 22, '11px')}` },
-
-      // 11. ACCESORIOS DE TUBERÍA
-      'acc_trap': { cat: '11. Accesorios de Tubería', name: 'Trampa Vapor', svg: `<rect x="-14" y="-14" width="28" height="28" fill="#202230" stroke="#fff" stroke-width="2"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#fff" stroke-width="2"/>${txt('T', 0, '12px')}` },
-      'acc_rupture': { cat: '11. Accesorios de Tubería', name: 'Disco Ruptura (PSE)', svg: `<line x1="-14" y1="12" x2="14" y2="12" stroke="#fff" stroke-width="2.5"/><line x1="0" y1="-10" x2="0" y2="12" stroke="#fff" stroke-width="2"/><polygon points="0,-10 -10,0 10,0" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>${txt('PSE', -20, '11px')}` },
-      'acc_strainer_y': { cat: '11. Accesorios de Tubería', name: 'Filtro Y (Strainer)', svg: `<path d="M -15 0 L 15 0 M 0 0 L 10 15 L -5 15 Z" fill="none" stroke="#fff" stroke-width="2.5"/><line x1="-5" y1="15" x2="5" y2="5" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2,2"/>${txt('STR', 26, '11px')}` },
-      'acc_sight': { cat: '11. Accesorios de Tubería', name: 'Mirilla (Sight Glass)', svg: `<circle cx="0" cy="0" r="14" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/><line x1="-20" y1="0" x2="-14" y2="0" stroke="#fff" stroke-width="2.5"/><line x1="14" y1="0" x2="20" y2="0" stroke="#fff" stroke-width="2.5"/>${txt('SG', 24, '11px')}` },
-      'acc_silencer': { cat: '11. Accesorios de Tubería', name: 'Silenciador', svg: `<rect x="-12" y="-20" width="24" height="40" rx="12" fill="#202230" stroke="#fff" stroke-width="2"/><line x1="-6" y1="-10" x2="6" y2="-10" stroke="#94a3b8"/><line x1="-6" y1="0" x2="6" y2="0" stroke="#94a3b8"/><line x1="-6" y1="10" x2="6" y2="10" stroke="#94a3b8"/>${txt('SIL', 32, '11px')}` },
-      'acc_flame': { cat: '11. Accesorios de Tubería', name: 'Atrapallamas', svg: `<rect x="-15" y="-10" width="30" height="20" fill="#202230" stroke="#fff" stroke-width="2"/><line x1="-15" y1="-10" x2="15" y2="10" stroke="#ef4444" stroke-width="2"/><line x1="-15" y1="10" x2="15" y2="-10" stroke="#ef4444" stroke-width="2"/>${txt('FA', 24, '11px')}` },
-      'sens_temp': { cat: '11. Accesorios de Tubería', name: 'Termopozo (TE)', svg: `<line x1="-12" y1="8" x2="12" y2="8" stroke="#fff" stroke-width="2"/><line x1="0" y1="-15" x2="0" y2="8" stroke="#f87171" stroke-width="2.5"/><circle cx="0" cy="-15" r="4" fill="#f87171"/>${txt('TE', -26, '10px', '#f87171')}` },
-      'sens_press': { cat: '11. Accesorios de Tubería', name: 'Manómetro (PG)', svg: `<circle cx="0" cy="-12" r="14" fill="#161620" stroke="#34d399" stroke-width="2"/><line x1="0" y1="2" x2="0" y2="14" stroke="#fff" stroke-width="2"/>${txt('PG', -12, '10px', '#34d399')}` },
-      'sens_level': { cat: '11. Accesorios de Tubería', name: 'Mirilla Nivel (LG)', svg: `<rect x="-6" y="-25" width="12" height="50" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/><line x1="-6" y1="-15" x2="-16" y2="-15" stroke="#fff" stroke-width="2"/><line x1="-6" y1="15" x2="-16" y2="15" stroke="#fff" stroke-width="2"/>${txt('LG', 16, '11px')}` },
-      'cam_fixed': { cat: '11. Accesorios de Tubería', name: 'Cámara Fija (2024)', svg: `<rect x="-15" y="-10" width="20" height="20" fill="#202230" stroke="#ffffff" stroke-width="2"/><polygon points="5,-5 15,-10 15,10 5,5" fill="#384260" stroke="#ffffff" stroke-width="2"/>${txt('K', -5, '10px')}` },
-      'cam_ptz': { cat: '11. Accesorios de Tubería', name: 'Cámara PTZ (2024)', svg: `<rect x="-15" y="-10" width="20" height="20" fill="#202230" stroke="#ffffff" stroke-width="2"/><polygon points="5,-5 15,-10 15,10 5,5" fill="#384260" stroke="#ffffff" stroke-width="2"/><polygon points="-5,-10 0,-15 5,-10" fill="none" stroke="#38bdf8" stroke-width="1.5"/>${txt('Z', -5, '10px')}` },
-
-      // --- 12. SET COMPLETO DE INSTRUMENTOS ISA (24 VARIANTES CON TI Y ##) ---
-      'isa_1': { cat: '12. Instrumentación ISA', name: 'Campo (Dividido)', svg: `<circle cx="0" cy="0" r="20" fill="#161620" stroke="#fff" stroke-width="2"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#fff" stroke-width="1.5"/>${txt('TI', -6, '9px')}${txt('##', 8, '9px')}` },
-      'isa_2': { cat: '12. Instrumentación ISA', name: 'Campo (Simple)', svg: `<circle cx="0" cy="0" r="20" fill="#161620" stroke="#fff" stroke-width="2"/>${txt('TI', -6, '9px')}${txt('##', 8, '9px')}` },
-      'isa_3': { cat: '12. Instrumentación ISA', name: 'Campo (Punteado)', svg: `<circle cx="0" cy="0" r="20" fill="#161620" stroke="#fff" stroke-width="2"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#fff" stroke-width="1.5" stroke-dasharray="3,2"/>${txt('TI', -6, '9px')}${txt('##', 8, '9px')}` },
-      'isa_4': { cat: '12. Instrumentación ISA', name: 'Campo (Doble L.)', svg: `<circle cx="0" cy="0" r="20" fill="#161620" stroke="#fff" stroke-width="2"/><line x1="-20" y1="-3" x2="20" y2="-3" stroke="#fff" stroke-width="1.5"/><line x1="-20" y1="3" x2="20" y2="3" stroke="#fff" stroke-width="1.5"/>${txt('TI', -7, '9px')}${txt('##', 10, '9px')}` },
-      'isa_5': { cat: '12. Instrumentación ISA', name: 'Panel (Cuad. Div.)', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><circle cx="0" cy="0" r="20" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_6': { cat: '12. Instrumentación ISA', name: 'Panel (Cuad. Simple)', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><circle cx="0" cy="0" r="20" fill="none" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_7': { cat: '12. Instrumentación ISA', name: 'Panel (Cuad. Punt.)', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><circle cx="0" cy="0" r="20" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_8': { cat: '12. Instrumentación ISA', name: 'Panel (Cuad. Doble)', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><circle cx="0" cy="0" r="20" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="-3" x2="20" y2="-3" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="3" x2="20" y2="3" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -7, '9px', '#38bdf8')}${txt('##', 10, '9px')}` },
-      'isa_9': { cat: '12. Instrumentación ISA', name: 'Hexágono (Div.)', svg: `<polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="#161620" stroke="#38bdf8" stroke-width="2"/><line x1="-19" y1="0" x2="19" y2="0" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_10': { cat: '12. Instrumentación ISA', name: 'Hexágono (Simple)', svg: `<polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="#161620" stroke="#38bdf8" stroke-width="2"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_11': { cat: '12. Instrumentación ISA', name: 'Hexágono (Punt.)', svg: `<polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="#161620" stroke="#38bdf8" stroke-width="2"/><line x1="-19" y1="0" x2="19" y2="0" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_12': { cat: '12. Instrumentación ISA', name: 'Hexágono (Doble)', svg: `<polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="#161620" stroke="#38bdf8" stroke-width="2"/><line x1="-19" y1="-3" x2="19" y2="-3" stroke="#38bdf8" stroke-width="1.5"/><line x1="-19" y1="3" x2="19" y2="3" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -7, '9px', '#38bdf8')}${txt('##', 10, '9px')}` },
-      'isa_13': { cat: '12. Instrumentación ISA', name: 'Rombo/Cuad. Div.', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><polygon points="0,-20 20,0 0,20 -20,0" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_14': { cat: '12. Instrumentación ISA', name: 'Rombo/Cuad. Simple', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><polygon points="0,-20 20,0 0,20 -20,0" fill="none" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_15': { cat: '12. Instrumentación ISA', name: 'Rombo/Cuad. Punt.', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><polygon points="0,-20 20,0 0,20 -20,0" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_16': { cat: '12. Instrumentación ISA', name: 'Rombo/Cuad. Doble', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><polygon points="0,-20 20,0 0,20 -20,0" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="-3" x2="20" y2="-3" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="3" x2="20" y2="3" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -7, '9px', '#38bdf8')}${txt('##', 10, '9px')}` },
-      'isa_17': { cat: '12. Instrumentación ISA', name: 'Rombo Solo (Div.)', svg: `<polygon points="0,-22 22,0 0,22 -22,0" fill="#161620" stroke="#38bdf8" stroke-width="2"/><line x1="-22" y1="0" x2="22" y2="0" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_18': { cat: '12. Instrumentación ISA', name: 'Rombo Solo (Simple)', svg: `<polygon points="0,-22 22,0 0,22 -22,0" fill="#161620" stroke="#38bdf8" stroke-width="2"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_19': { cat: '12. Instrumentación ISA', name: 'Rombo Solo (Punt.)', svg: `<polygon points="0,-22 22,0 0,22 -22,0" fill="#161620" stroke="#38bdf8" stroke-width="2"/><line x1="-22" y1="0" x2="22" y2="0" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
-      'isa_20': { cat: '12. Instrumentación ISA', name: 'Rombo Solo (Doble)', svg: `<polygon points="0,-22 22,0 0,22 -22,0" fill="#161620" stroke="#38bdf8" stroke-width="2"/><line x1="-22" y1="-3" x2="22" y2="-3" stroke="#38bdf8" stroke-width="1.5"/><line x1="-22" y1="3" x2="22" y2="3" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -7, '9px', '#38bdf8')}${txt('##', 10, '9px')}` },
-      'isa_21': { cat: '12. Instrumentación ISA', name: 'Campo vástago (Div.)', svg: `<circle cx="0" cy="-10" r="16" fill="#161620" stroke="#fff" stroke-width="1.5"/><line x1="0" y1="6" x2="0" y2="28" stroke="#fff" stroke-width="2"/><line x1="-16" y1="-10" x2="16" y2="-10" stroke="#fff" stroke-width="1.2"/>${txt('TI', -15, '8px')}${txt('##', -4, '8px')}` },
-      'isa_22': { cat: '12. Instrumentación ISA', name: 'Panel vástago (Cuad.)', svg: `<rect x="-16" y="-26" width="32" height="32" fill="#161620" stroke="#38bdf8" stroke-width="1.5"/><circle cx="0" cy="-10" r="13" fill="none" stroke="#38bdf8" stroke-width="1.2"/><line x1="0" y1="6" x2="0" y2="28" stroke="#fff" stroke-width="2"/><line x1="-16" y1="-10" x2="16" y2="-10" stroke="#38bdf8" stroke-width="1.2"/>${txt('TI', -15, '8px', '#38bdf8')}${txt('##', -4, '8px')}` },
-      'isa_23': { cat: '12. Instrumentación ISA', name: 'Panel vástago (Hex.)', svg: `<polygon points="0,-23 15,-15 15,5 0,13 -15,5 -15,-15" fill="#161620" stroke="#38bdf8" stroke-width="1.5"/><line x1="0" y1="5" x2="0" y2="28" stroke="#fff" stroke-width="2"/><line x1="-15" y1="-5" x2="15" y2="-5" stroke="#38bdf8" stroke-width="1.2"/>${txt('TI', -10, '8px', '#38bdf8')}${txt('##', 1, '8px')}` },
-      'isa_24': { cat: '12. Instrumentación ISA', name: 'Panel vástago (Rombo)', svg: `<rect x="-16" y="-26" width="32" height="32" fill="#161620" stroke="#38bdf8" stroke-width="1.5"/><polygon points="0,-21 15,-10 0,1 -15,-10" fill="none" stroke="#38bdf8" stroke-width="1.2"/><line x1="0" y1="6" x2="0" y2="28" stroke="#fff" stroke-width="2"/><line x1="-15" y1="-10" x2="15" y2="-10" stroke="#38bdf8" stroke-width="1.2"/>${txt('TI', -15, '8px', '#38bdf8')}${txt('##', -4, '8px')}` },
-      'loop_terminal': { cat: '12. Instrumentación ISA', name: 'Borne de Lazo', svg: `<rect x="-15" y="-15" width="30" height="30" fill="#161620" stroke="#38bdf8" stroke-width="2"/>${txt('TB-1', 0, '10px', '#38bdf8')}<circle cx="-15" cy="0" r="3" fill="#ffffff"/><circle cx="15" cy="0" r="3" fill="#ffffff"/>` }
+      'isa_1': { cat: '9. Instrumentación ISA', name: 'Campo (Dividido)', svg: `<circle cx="0" cy="0" r="20" fill="#161620" stroke="#fff" stroke-width="2"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#fff" stroke-width="1.5"/>${txt('TI', -6, '9px')}${txt('##', 8, '9px')}` },
+      'isa_5': { cat: '9. Instrumentación ISA', name: 'Panel (Cuad. Div.)', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><circle cx="0" cy="0" r="20" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
+      'isa_9': { cat: '9. Instrumentación ISA', name: 'Hexágono (Div.)', svg: `<polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="#161620" stroke="#38bdf8" stroke-width="2"/><line x1="-19" y1="0" x2="19" y2="0" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
+      'isa_13': { cat: '9. Instrumentación ISA', name: 'Rombo/Cuad. Div.', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><polygon points="0,-20 20,0 0,20 -20,0" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#38bdf8" stroke-width="1.5"/>${txt('TI', -6, '9px', '#38bdf8')}${txt('##', 8, '9px')}` },
+      'isa_lamp': { cat: '9. Instrumentación ISA', name: 'Lámpara', svg: `<circle cx="0" cy="0" r="20" fill="#161620" stroke="#fff" stroke-width="2"/><line x1="-14" y1="-14" x2="14" y2="14" stroke="#fff" stroke-width="2"/><line x1="-14" y1="14" x2="14" y2="-14" stroke="#fff" stroke-width="2"/>${txt('IL', 0, '10px', '#38bdf8')}` },
+      'isa_elongated': { cat: '9. Instrumentación ISA', name: 'Burbuja Alargada', svg: `<rect x="-35" y="-20" width="70" height="40" rx="20" fill="#161620" stroke="#ffffff" stroke-width="2"/><line x1="-35" y1="0" x2="35" y2="0" stroke="#ffffff" stroke-width="1.5"/>${txt('PIC-101A', -8, '9px')}${txt('101', 10, '9px')}` },
+      'loop_terminal': { cat: '9. Instrumentación ISA', name: 'Borne de Lazo', svg: `<rect x="-15" y="-15" width="30" height="30" fill="#161620" stroke="#38bdf8" stroke-width="2"/>${txt('TB-1', 0, '10px', '#38bdf8')}<circle cx="-15" cy="0" r="3" fill="#ffffff"/><circle cx="15" cy="0" r="3" fill="#ffffff"/>` }
     };
 
-    // GENERAR BARRA LATERAL CON MINIATURAS Y BÚSQUEDA EN VIVO
+    // GENERAR BARRA LATERAL CON BÚSQUEDA
     function renderSidebar(filterText = '') {
       const categories = {};
       for (let key in componentLibrary) {
@@ -310,9 +214,9 @@
     }
 
     function filterSidebar(val) { renderSidebar(val); }
-    renderSidebar(); // Render inicial completo
+    renderSidebar();
 
-    // --- LOGICA CORE DE LA APP ---
+    // --- LOGICA CORE Y NODOS DE MOVIMIENTO DE TUBERÍAS ---
     const undoStack = []; const redoStack = [];
     function saveState() {
       undoStack.push({ symbols: symbolsLayer.innerHTML, pipes: pipesLayer.innerHTML });
@@ -335,13 +239,50 @@
       return { x: cx - rect.left, y: cy - rect.top };
     }
 
-    function selectElement(elem) { if (selectedTarget && selectedTarget !== elem) selectedTarget.classList.remove('is-selected'); selectedTarget = elem; if (selectedTarget) selectedTarget.classList.add('is-selected'); }
+    function selectElement(elem) { 
+      if (selectedTarget && selectedTarget !== elem) selectedTarget.classList.remove('is-selected'); 
+      selectedTarget = elem; 
+      if (selectedTarget) selectedTarget.classList.add('is-selected'); 
+    }
     function clearSelection() { if (selectedTarget) { selectedTarget.classList.remove('is-selected'); selectedTarget = null; } }
     function deleteSelectedItem() { if (selectedTarget) { saveState(); selectedTarget.remove(); selectedTarget = null; } }
-    canvas.addEventListener('mousedown', (e) => { if (e.target === canvas && !isPipeMode) clearSelection(); });
-    function generateOrthogonalPath(x1, y1, x2, y2) { return `M ${x1} ${y1} L ${Math.round(x1 + (x2 - x1)/2)} ${y1} L ${Math.round(x1 + (x2 - x1)/2)} ${y2} L ${x2} ${y2}`; }
+    canvas.addEventListener('mousedown', (e) => { if (e.target === canvas && !isPipeMode && !e.target.classList.contains('pipe-node')) clearSelection(); });
 
-    // DIBUJAR COMPONENTE
+    // FUNCION PARA CREAR NODOS EDITABLES EN TUBERÍAS
+    function updatePipeNodes(group) {
+      group.querySelectorAll('.pipe-node').forEach(n => n.remove());
+      const visPath = group.querySelector('.pipe-visible');
+      if (!visPath) return;
+      const d = visPath.getAttribute('d');
+      const pts = d.match(/[0-9.-]+/g);
+      if (!pts || pts.length < 4) return;
+
+      // Extraer puntos clave (inicio, quiebres y fin) de la ruta ortogonal
+      const coords = [];
+      for (let i = 0; i < pts.length; i += 2) {
+        coords.push({ x: parseFloat(pts[i]), y: parseFloat(pts[i+1]) });
+      }
+
+      coords.forEach((pt, index) => {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('class', 'pipe-node');
+        circle.setAttribute('cx', pt.x);
+        circle.setAttribute('cy', pt.y);
+        circle.setAttribute('r', '5');
+        circle.setAttribute('data-index', index);
+
+        const handleNodeDrag = (e) => {
+          e.stopPropagation();
+          saveState();
+          draggingNode = { group, index, coords };
+          selectElement(group);
+        };
+        circle.addEventListener('mousedown', handleNodeDrag);
+        circle.addEventListener('touchstart', handleNodeDrag, { passive: false });
+        group.appendChild(circle);
+      });
+    }
+
     function addSymbol(type) {
       saveState();
       const rect = canvas.getBoundingClientRect(); const posX = rect.width ? rect.width / 2 : 350; const posY = rect.height ? rect.height / 2 : 300;
@@ -363,8 +304,7 @@
           const currentText = Array.from(texts).map(t => t.textContent).join('-');
           const val = prompt('Editar textos (Formato: SUPERIOR-INFERIOR):', currentText);
           if (val !== null && val.trim() !== '') {
-            saveState();
-            const parts = val.split('-');
+            saveState(); const parts = val.split('-');
             if(parts.length > 0 && texts[0]) texts[0].textContent = parts[0].trim();
             if(parts.length > 1 && texts[1]) texts[1].textContent = parts[1].trim();
           }
@@ -377,19 +317,43 @@
       const pos = getCoords(e);
       if (draggingElement && !isPipeMode) {
         e.preventDefault(); draggingElement.setAttribute('transform', `translate(${Math.round((pos.x - offset.x) / 10) * 10}, ${Math.round((pos.y - offset.y) / 10) * 10})`);
+      } else if (draggingNode) {
+        e.preventDefault();
+        const { group, index, coords } = draggingNode;
+        coords[index] = { x: Math.round(pos.x / 5) * 5, y: Math.round(pos.y / 5) * 5 };
+        
+        // Reconstruir ruta ortogonal moviendo el nodo seleccionado al lado de estanques u otros equipos
+        let newD = `M ${coords[0].x} ${coords[0].y}`;
+        for (let i = 1; i < coords.length; i++) {
+          newD += ` L ${coords[i].x} ${coords[i].y}`;
+        }
+        group.querySelectorAll('path.pipe-visible, path.pipe-hit-area').forEach(p => p.setAttribute('d', newD));
+        updatePipeNodes(group);
       } else if (activePipeGroup && isPipeMode && pipeStartPoint) {
-        activePipeGroup.querySelectorAll('path.pipe-visible, path.pipe-hit-area').forEach(p => p.setAttribute('d', generateOrthogonalPath(pipeStartPoint.x, pipeStartPoint.y, pos.x, pos.y)));
+        const midX = Math.round(pipeStartPoint.x + (pos.x - pipeStartPoint.x) / 2);
+        const pathData = `M ${pipeStartPoint.x} ${pipeStartPoint.y} L ${midX} ${pipeStartPoint.y} L ${midX} ${pos.y} L ${pos.x} ${pos.y}`;
+        activePipeGroup.querySelectorAll('path.pipe-visible, path.pipe-hit-area').forEach(p => p.setAttribute('d', pathData));
       }
     }
-    function handleEnd() { if (draggingElement) { saveState(); draggingElement = null; } }
+
+    function handleEnd() { 
+      if (draggingElement || draggingNode) { saveState(); draggingElement = null; draggingNode = null; } 
+    }
     canvas.addEventListener('mousemove', handleMove); canvas.addEventListener('touchmove', handleMove, { passive: false });
     window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd);
 
     // TUBERIAS Y SEÑALES
     function togglePipeMode() { isPipeMode = !isPipeMode; document.getElementById('pipe-btn').classList.toggle('active-mode', isPipeMode); document.getElementById('pipe-btn').textContent = isPipeMode ? 'Modo Trazado 90°' : 'Trazar Línea (90°)'; canvas.style.cursor = isPipeMode ? 'cell' : 'crosshair'; activePipeGroup = null; pipeStartPoint = null; clearSelection(); }
     function setPipeStyle(type) { pipeType = type; document.querySelectorAll('.btn-pipe-type').forEach(b => b.classList.remove('selected')); document.getElementById(`pipe-${type}`).classList.add('selected'); }
+    
     function bindPipeGroupEvents(group) {
-      group.addEventListener('mousedown', (evt) => { if (!isPipeMode) { evt.stopPropagation(); selectElement(group); }});
+      group.addEventListener('mousedown', (evt) => { 
+        if (!isPipeMode && !evt.target.classList.contains('pipe-node')) { 
+          evt.stopPropagation(); 
+          selectElement(group); 
+          updatePipeNodes(group); 
+        } 
+      });
       group.addEventListener('contextmenu', (evt) => { evt.preventDefault(); evt.stopPropagation(); if (confirm('¿Eliminar tramo?')) { saveState(); if (selectedTarget === group) selectedTarget = null; group.remove(); } });
     }
 
@@ -399,7 +363,7 @@
       if (!activePipeGroup) {
         saveState(); pipeStartPoint = { x: pos.x, y: pos.y };
         activePipeGroup = document.createElementNS(SVG_NS, 'g'); activePipeGroup.setAttribute('class', 'pipe-group');
-        const initialPath = generateOrthogonalPath(pos.x, pos.y, pos.x, pos.y);
+        const initialPath = `M ${pos.x} ${pos.y} L ${pos.x} ${pos.y} L ${pos.x} ${pos.y} L ${pos.x} ${pos.y}`;
         
         const hitArea = document.createElementNS(SVG_NS, 'path'); hitArea.setAttribute('class', 'pipe-hit-area'); hitArea.setAttribute('d', initialPath); hitArea.setAttribute('fill', 'none'); hitArea.setAttribute('stroke', 'transparent'); hitArea.setAttribute('stroke-width', '26'); hitArea.setAttribute('stroke-linejoin', 'round'); hitArea.setAttribute('cursor', 'pointer');
         const visPath = document.createElementNS(SVG_NS, 'path'); visPath.setAttribute('class', 'pipe-visible'); visPath.setAttribute('d', initialPath); visPath.setAttribute('fill', 'none'); visPath.setAttribute('stroke-linejoin', 'round'); visPath.setAttribute('cursor', 'pointer');
@@ -414,7 +378,12 @@
         else if (pipeType === 'wireless') { visPath.setAttribute('stroke', '#4ade80'); visPath.setAttribute('stroke-width', '2.5'); visPath.setAttribute('stroke-dasharray', '3,5'); }
         
         activePipeGroup.appendChild(visPath); activePipeGroup.appendChild(hitArea); pipesLayer.appendChild(activePipeGroup); bindPipeGroupEvents(activePipeGroup);
-      } else { selectElement(activePipeGroup); activePipeGroup = null; pipeStartPoint = null; }
+      } else { 
+        selectElement(activePipeGroup); 
+        updatePipeNodes(activePipeGroup);
+        activePipeGroup = null; 
+        pipeStartPoint = null; 
+      }
     });
 
     function clearCanvas() { if (confirm('¿Vaciar todo el diagrama?')) { saveState(); symbolsLayer.innerHTML = ''; pipesLayer.innerHTML = ''; activePipeGroup = null; selectedTarget = null; } }
@@ -438,20 +407,28 @@
 
     // EXPORTACIÓN Y GUARDADO
     function exportSVG() {
-      clearSelection(); const blob = new Blob([new XMLSerializer().serializeToString(canvas)], { type: 'image/svg+xml;charset=utf-8' });
+      clearSelection(); 
+      symbolsLayer.querySelectorAll('.pipe-node').forEach(n => n.style.display = 'none');
+      const blob = new Blob([new XMLSerializer().serializeToString(canvas)], { type: 'image/svg+xml;charset=utf-8' });
+      symbolsLayer.querySelectorAll('.pipe-node').forEach(n => n.style.display = '');
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'diagrama.svg'; a.click();
     }
     function exportPNG() {
-      clearSelection(); const img = new Image();
+      clearSelection(); 
+      symbolsLayer.querySelectorAll('.pipe-node').forEach(n => n.style.display = 'none');
+      const img = new Image();
       img.onload = () => {
         const outCanvas = document.createElement('canvas'); outCanvas.width = canvas.clientWidth || 1600; outCanvas.height = canvas.clientHeight || 900;
         const ctx = outCanvas.getContext('2d'); ctx.fillStyle = '#121217'; ctx.fillRect(0, 0, outCanvas.width, outCanvas.height); ctx.drawImage(img, 0, 0);
+        symbolsLayer.querySelectorAll('.pipe-node').forEach(n => n.style.display = '');
         const a = document.createElement('a'); a.download = 'diagrama.png'; a.href = outCanvas.toDataURL('image/png'); a.click();
       };
       img.src = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(canvas)], { type: 'image/svg+xml;charset=utf-8' }));
     }
     function saveProjectJSON() {
-      clearSelection(); const blob = new Blob([JSON.stringify({ version: "6.0", symbolsHTML: symbolsLayer.innerHTML, pipesHTML: pipesLayer.innerHTML }, null, 2)], { type: 'application/json' });
+      clearSelection(); 
+      symbolsLayer.querySelectorAll('.pipe-node').forEach(n => n.remove());
+      const blob = new Blob([JSON.stringify({ version: "7.0", symbolsHTML: symbolsLayer.innerHTML, pipesHTML: pipesLayer.innerHTML }, null, 2)], { type: 'application/json' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'proyecto.json'; a.click();
     }
     function loadProjectJSON(event) {
