@@ -115,6 +115,11 @@
       gap: 10px;
     }
 
+    /* Scroll personalizado para la barra lateral */
+    #sidebar::-webkit-scrollbar { width: 6px; }
+    #sidebar::-webkit-scrollbar-track { background: #161620; }
+    #sidebar::-webkit-scrollbar-thumb { background: #3f4259; border-radius: 3px; }
+
     .category-box {
       border: 1px solid #272738;
       border-radius: 6px;
@@ -180,7 +185,7 @@
     .pipe-group.is-selected .pipe-visible { stroke: #facc15 !important; stroke-width: 4.5px !important; marker-end: url(#arrow-selected) !important; }
     .pipe-group.is-selected text { fill: #facc15 !important; }
 
-    /* ESTILOS DEL MODAL BOM (LISTA DE MATERIALES) */
+    /* ESTILOS MODAL BOM */
     .bom-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000;
@@ -201,7 +206,6 @@
 </head>
 <body>
 
-  <!-- BARRA SUPERIOR -->
   <header>
     <div class="toolbar-group">
       <!-- HISTORIAL Y EDICIÓN -->
@@ -228,7 +232,6 @@
     </div>
   </header>
 
-  <!-- CUERPO PRINCIPAL -->
   <div id="main-layout">
     <aside id="sidebar">
       <!-- 1. EQUIPOS DE PROCESO -->
@@ -241,8 +244,28 @@
           <button class="item-btn" onclick="addSymbol('heat_exchanger')">Intercambiador Calor</button>
           <button class="item-btn" onclick="addSymbol('dest_tower')">Torre Destilación</button>
           <button class="item-btn" onclick="addSymbol('furnace')">Horno / Caldera</button>
-          <button class="item-btn" onclick="addSymbol('cyclone')">Ciclón Separador</button>
           <button class="item-btn" onclick="addSymbol('silo')">Tolva / Silo</button>
+        </div>
+      </div>
+
+      <!-- NUEVO: FILTROS Y SEPARADORES -->
+      <div class="category-box">
+        <div class="category-title">Filtros y Centrífugas</div>
+        <div class="category-grid">
+          <button class="item-btn" onclick="addSymbol('filter_generic')">Filtro Genérico</button>
+          <button class="item-btn" onclick="addSymbol('centrifuge')">Centrífuga</button>
+          <button class="item-btn" onclick="addSymbol('cyclone')">Ciclón Separador</button>
+        </div>
+      </div>
+
+      <!-- NUEVO: MANEJO DE SÓLIDOS -->
+      <div class="category-box">
+        <div class="category-title">Manejo de Sólidos</div>
+        <div class="category-grid">
+          <button class="item-btn" onclick="addSymbol('crusher')">Trituradora / Molino</button>
+          <button class="item-btn" onclick="addSymbol('feeder_rotary')">Alimentador Rotat.</button>
+          <button class="item-btn" onclick="addSymbol('dryer')">Secador Ind.</button>
+          <button class="item-btn" onclick="addSymbol('conveyor')">Banda Transportadora</button>
         </div>
       </div>
 
@@ -254,8 +277,8 @@
           <button class="item-btn" onclick="addSymbol('pump_positive')">Desplaz. Positivo</button>
           <button class="item-btn" onclick="addSymbol('compressor')">Compresor</button>
           <button class="item-btn" onclick="addSymbol('motor_electric')">Motor Eléctrico</button>
+          <button class="item-btn" onclick="addSymbol('generator')">Generador (G)</button>
           <button class="item-btn" onclick="addSymbol('agitator')">Agitador / Mezclador</button>
-          <button class="item-btn" onclick="addSymbol('conveyor')">Banda Transportadora</button>
         </div>
       </div>
 
@@ -293,8 +316,8 @@
       <div class="category-box">
         <div class="category-title">Instrumentación y Relés ISA</div>
         <div class="category-grid">
-          <button class="item-btn" onclick="addSymbol('inst_field')">Instrumento Campo</button>
-          <button class="item-btn" onclick="addSymbol('inst_panel')">Instrumento Panel</button>
+          <button class="item-btn" onclick="addSymbol('inst_field')">Inst. en Campo</button>
+          <button class="item-btn" onclick="addSymbol('inst_panel')">Inst. en Panel</button>
           <button class="item-btn" onclick="addSymbol('inst_plc')">Bloque PLC / DCS</button>
           <button class="item-btn" onclick="addSymbol('relay_sqrt')">Relé Raíz (FY √)</button>
           <button class="item-btn" onclick="addSymbol('relay_sum')">Relé Sumador (FY Σ)</button>
@@ -305,7 +328,6 @@
       </div>
     </aside>
 
-    <!-- LIENZO SVG -->
     <main id="canvas-container">
       <svg id="pid-canvas" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -327,8 +349,8 @@
     const symbolsLayer = document.getElementById('symbols-layer');
     const pipesLayer = document.getElementById('pipes-layer');
     const pipeBtn = document.getElementById('pipe-btn');
-
     const SVG_NS = "http://www.w3.org/2000/svg";
+    
     let isPipeMode = false;
     let pipeType = 'process';
     let pipeStartPoint = null;
@@ -337,7 +359,7 @@
     let selectedTarget = null;
     let offset = { x: 0, y: 0 };
 
-    // DICCIONARIO DE COMPONENTES PARA EL BOM
+    // DICCIONARIO ACTUALIZADO CON LOS NUEVOS COMPONENTES
     const symbolDictionary = {
       'tank_vertical': 'Estanque Vertical',
       'tank_horizontal': 'Estanque Horizontal',
@@ -345,14 +367,20 @@
       'heat_exchanger': 'Intercambiador de Calor',
       'dest_tower': 'Torre de Destilación',
       'furnace': 'Horno / Caldera',
-      'cyclone': 'Ciclón Separador',
       'silo': 'Tolva / Silo',
+      'filter_generic': 'Filtro Genérico',         // NUEVO
+      'centrifuge': 'Centrífuga',                  // NUEVO
+      'cyclone': 'Ciclón Separador',
+      'crusher': 'Trituradora / Molino',           // NUEVO
+      'feeder_rotary': 'Alimentador Rotativo',     // NUEVO
+      'dryer': 'Secador Industrial',               // NUEVO
+      'conveyor': 'Banda Transportadora',
       'pump_centrifugal': 'Bomba Centrífuga',
       'pump_positive': 'Bomba Desplaz. Positivo',
-      'compressor': 'Compresor',
+      'compressor': 'Compresor de Gases',
       'motor_electric': 'Motor Eléctrico',
+      'generator': 'Generador Eléctrico',          // NUEVO
       'agitator': 'Agitador / Mezclador',
-      'conveyor': 'Banda Transportadora',
       'elem_orifice': 'Placa Orificio (FE)',
       'elem_venturi': 'Tubo Venturi (FE)',
       'elem_rotameter': 'Rotámetro (FI)',
@@ -366,7 +394,7 @@
       'valve_control_diaph': 'Válvula de Control',
       'valve_solenoid': 'Electroválvula',
       'valve_3way': 'Válvula de 3 Vías',
-      'valve_relief': 'Válvula de Alivio / Seguridad (PSV)',
+      'valve_relief': 'Válvula de Alivio (PSV)',
       'act_piston': 'Actuador de Cilindro / Pistón',
       'valve_butterfly': 'Válvula Mariposa',
       'inst_field': 'Instrumento en Campo',
@@ -384,10 +412,7 @@
     const redoStack = [];
 
     function saveState() {
-      const state = {
-        symbols: symbolsLayer.innerHTML,
-        pipes: pipesLayer.innerHTML
-      };
+      const state = { symbols: symbolsLayer.innerHTML, pipes: pipesLayer.innerHTML };
       undoStack.push(state);
       if (undoStack.length > 30) undoStack.shift();
       redoStack.length = 0;
@@ -415,7 +440,6 @@
       pipesLayer.querySelectorAll('.pipe-group').forEach(bindPipeGroupEvents);
     }
 
-    // Atajos de teclado
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
@@ -437,19 +461,14 @@
 
     function createSVGText(text, x, y, fill = "#ffffff", size = "11px", weight = "normal") {
       const el = document.createElementNS(SVG_NS, 'text');
-      el.setAttribute('x', x);
-      el.setAttribute('y', y);
-      el.setAttribute('fill', fill);
-      el.setAttribute('font-size', size);
-      el.setAttribute('font-weight', weight);
-      el.setAttribute('text-anchor', 'middle');
-      el.setAttribute('dominant-baseline', 'central');
-      el.setAttribute('font-family', 'sans-serif');
+      el.setAttribute('x', x); el.setAttribute('y', y);
+      el.setAttribute('fill', fill); el.setAttribute('font-size', size);
+      el.setAttribute('font-weight', weight); el.setAttribute('text-anchor', 'middle');
+      el.setAttribute('dominant-baseline', 'central'); el.setAttribute('font-family', 'sans-serif');
       el.textContent = text;
       return el;
     }
 
-    // SELECCIÓN Y BORRADO
     function selectElement(elem) {
       if (selectedTarget && selectedTarget !== elem) selectedTarget.classList.remove('is-selected');
       selectedTarget = elem;
@@ -457,18 +476,11 @@
     }
 
     function clearSelection() {
-      if (selectedTarget) {
-        selectedTarget.classList.remove('is-selected');
-        selectedTarget = null;
-      }
+      if (selectedTarget) { selectedTarget.classList.remove('is-selected'); selectedTarget = null; }
     }
 
     function deleteSelectedItem() {
-      if (selectedTarget) {
-        saveState();
-        selectedTarget.remove();
-        selectedTarget = null;
-      }
+      if (selectedTarget) { saveState(); selectedTarget.remove(); selectedTarget = null; }
     }
 
     canvas.addEventListener('mousedown', (e) => {
@@ -480,7 +492,7 @@
       return `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
     }
 
-    // AÑADIR SÍMBOLO
+    // AÑADIR SÍMBOLOS AL LIENZO
     function addSymbol(type) {
       saveState();
       const rect = canvas.getBoundingClientRect();
@@ -489,7 +501,7 @@
 
       const group = document.createElementNS(SVG_NS, 'g');
       group.setAttribute('class', 'symbol-group');
-      group.setAttribute('data-type', type); // Tagging interno para el BOM
+      group.setAttribute('data-type', type);
       group.setAttribute('transform', `translate(${posX}, ${posY})`);
 
       // 1. EQUIPOS
@@ -560,6 +572,38 @@
         group.appendChild(path);
         group.appendChild(createSVGText('HORNO', 0, 20, '#ffffff', '10px', 'bold'));
       }
+      else if (type === 'silo') {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', 'M -35 -40 L 35 -40 L 35 15 L 12 50 L -12 50 L -35 15 Z');
+        path.setAttribute('fill', '#202230'); path.setAttribute('stroke', '#ffffff'); path.setAttribute('stroke-width', '2.5');
+        group.appendChild(path);
+        group.appendChild(createSVGText('SILO', 0, -5, '#ffffff', '11px', 'bold'));
+      }
+
+      // NUEVOS: FILTROS, MANEJO DE SÓLIDOS Y SEPARADORES
+      else if (type === 'filter_generic') {
+        const box = document.createElementNS(SVG_NS, 'rect');
+        box.setAttribute('x', '-25'); box.setAttribute('y', '-25');
+        box.setAttribute('width', '50'); box.setAttribute('height', '50');
+        box.setAttribute('fill', '#202230'); box.setAttribute('stroke', '#ffffff'); box.setAttribute('stroke-width', '2.5');
+        const diag = document.createElementNS(SVG_NS, 'line');
+        diag.setAttribute('x1', '-25'); diag.setAttribute('y1', '25');
+        diag.setAttribute('x2', '25'); diag.setAttribute('y2', '-25');
+        diag.setAttribute('stroke', '#ffffff'); diag.setAttribute('stroke-width', '2.5');
+        group.appendChild(box); group.appendChild(diag);
+        group.appendChild(createSVGText('F-101', 0, 36, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'centrifuge') {
+        const box = document.createElementNS(SVG_NS, 'rect');
+        box.setAttribute('x', '-25'); box.setAttribute('y', '-25');
+        box.setAttribute('width', '50'); box.setAttribute('height', '50');
+        box.setAttribute('fill', '#202230'); box.setAttribute('stroke', '#ffffff'); box.setAttribute('stroke-width', '2.5');
+        const inner = document.createElementNS(SVG_NS, 'path');
+        inner.setAttribute('d', 'M -25 0 L 25 0 M -15 0 L 0 -15 L 0 15 L 15 0');
+        inner.setAttribute('fill', 'none'); inner.setAttribute('stroke', '#38bdf8'); inner.setAttribute('stroke-width', '2.5');
+        group.appendChild(box); group.appendChild(inner);
+        group.appendChild(createSVGText('CF-101', 0, 36, '#ffffff', '11px', 'bold'));
+      }
       else if (type === 'cyclone') {
         const path = document.createElementNS(SVG_NS, 'path');
         path.setAttribute('d', 'M -30 -40 L 30 -40 L 30 0 L 0 45 L -30 0 Z');
@@ -567,12 +611,35 @@
         group.appendChild(path);
         group.appendChild(createSVGText('S-101', 0, -10, '#ffffff', '11px', 'bold'));
       }
-      else if (type === 'silo') {
-        const path = document.createElementNS(SVG_NS, 'path');
-        path.setAttribute('d', 'M -35 -40 L 35 -40 L 35 15 L 12 50 L -12 50 L -35 15 Z');
-        path.setAttribute('fill', '#202230'); path.setAttribute('stroke', '#ffffff'); path.setAttribute('stroke-width', '2.5');
-        group.appendChild(path);
-        group.appendChild(createSVGText('SILO', 0, -5, '#ffffff', '11px', 'bold'));
+      else if (type === 'crusher') {
+        const trap = document.createElementNS(SVG_NS, 'polygon');
+        trap.setAttribute('points', '-30,-25 30,-25 20,25 -20,25');
+        trap.setAttribute('fill', '#202230'); trap.setAttribute('stroke', '#ffffff'); trap.setAttribute('stroke-width', '2.5');
+        const cross1 = document.createElementNS(SVG_NS, 'line');
+        cross1.setAttribute('x1', '-10'); cross1.setAttribute('y1', '-10'); cross1.setAttribute('x2', '10'); cross1.setAttribute('y2', '10');
+        cross1.setAttribute('stroke', '#ef4444'); cross1.setAttribute('stroke-width', '3');
+        const cross2 = document.createElementNS(SVG_NS, 'line');
+        cross2.setAttribute('x1', '-10'); cross2.setAttribute('y1', '10'); cross2.setAttribute('x2', '10'); cross2.setAttribute('y2', '-10');
+        cross2.setAttribute('stroke', '#ef4444'); cross2.setAttribute('stroke-width', '3');
+        group.appendChild(trap); group.appendChild(cross1); group.appendChild(cross2);
+        group.appendChild(createSVGText('M-CR', 0, 36, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'dryer') {
+        const dShape = document.createElementNS(SVG_NS, 'polygon');
+        dShape.setAttribute('points', '-20,-30 20,-30 30,-20 30,40 -30,40 -30,-20');
+        dShape.setAttribute('fill', '#202230'); dShape.setAttribute('stroke', '#ffffff'); dShape.setAttribute('stroke-width', '2.5');
+        group.appendChild(dShape);
+        group.appendChild(createSVGText('DRY', 0, 0, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'feeder_rotary') {
+        const c = document.createElementNS(SVG_NS, 'circle');
+        c.setAttribute('cx', '0'); c.setAttribute('cy', '0'); c.setAttribute('r', '22');
+        c.setAttribute('fill', '#202230'); c.setAttribute('stroke', '#ffffff'); c.setAttribute('stroke-width', '2.5');
+        const spokes = document.createElementNS(SVG_NS, 'path');
+        spokes.setAttribute('d', 'M -22 0 L 22 0 M 0 -22 L 0 22 M -15 -15 L 15 15 M -15 15 L 15 -15');
+        spokes.setAttribute('fill', 'none'); spokes.setAttribute('stroke', '#ffffff'); spokes.setAttribute('stroke-width', '2');
+        group.appendChild(c); group.appendChild(spokes);
+        group.appendChild(createSVGText('FD-101', 0, 34, '#ffffff', '11px', 'bold'));
       }
 
       // 2. BOMBAS Y ACCIONAMIENTOS
@@ -610,6 +677,14 @@
         group.appendChild(circle);
         group.appendChild(createSVGText('M', 0, 0, '#f59e0b', '16px', 'bold'));
         group.appendChild(createSVGText('M-101', 0, 34, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'generator') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
+        circle.setAttribute('fill', '#1e293b'); circle.setAttribute('stroke', '#38bdf8'); circle.setAttribute('stroke-width', '2.5');
+        group.appendChild(circle);
+        group.appendChild(createSVGText('G', 0, 0, '#38bdf8', '16px', 'bold'));
+        group.appendChild(createSVGText('GEN', 0, 34, '#ffffff', '10px', 'bold'));
       }
       else if (type === 'agitator') {
         const motor = document.createElementNS(SVG_NS, 'rect');
@@ -949,10 +1024,7 @@
     }
 
     function handleEnd() {
-      if (draggingElement) {
-        saveState();
-        draggingElement = null;
-      }
+      if (draggingElement) { saveState(); draggingElement = null; }
     }
 
     canvas.addEventListener('mousemove', handleMove);
@@ -978,10 +1050,7 @@
 
     function bindPipeGroupEvents(group) {
       group.addEventListener('mousedown', (evt) => {
-        if (!isPipeMode) {
-          evt.stopPropagation();
-          selectElement(group);
-        }
+        if (!isPipeMode) { evt.stopPropagation(); selectElement(group); }
       });
 
       group.addEventListener('contextmenu', (evt) => {
@@ -995,7 +1064,6 @@
       });
     }
 
-    // TRAZADO ORTOGONAL DE LÍNEAS
     canvas.addEventListener('mousedown', (e) => {
       if (!isPipeMode || e.target.closest('.symbol-group')) return;
       const pos = getCoords(e);
@@ -1055,14 +1123,12 @@
     function clearCanvas() {
       if (confirm('¿Deseas vaciar todo el diagrama?')) {
         saveState();
-        symbolsLayer.innerHTML = '';
-        pipesLayer.innerHTML = '';
-        activePipeGroup = null;
-        selectedTarget = null;
+        symbolsLayer.innerHTML = ''; pipesLayer.innerHTML = '';
+        activePipeGroup = null; selectedTarget = null;
       }
     }
 
-    // --- MÓDULO BOM (BILL OF MATERIALS) ---
+    // --- BOM GENERATOR ---
     function generateBOM() {
       clearSelection();
       const items = {};
@@ -1071,23 +1137,18 @@
       elements.forEach(el => {
         const type = el.getAttribute('data-type');
         const name = symbolDictionary[type] || 'Componente Genérico';
-        
-        // Extracción inteligente de Tags leyendo los textos SVG
         const textNodes = el.querySelectorAll('text');
-        const rawTexts = Array.from(textNodes).map(t => t.textContent).filter(t => !['√', 'Σ', 'I/P', 'A/B', 'M', 'S'].includes(t));
+        const rawTexts = Array.from(textNodes).map(t => t.textContent).filter(t => !['√', 'Σ', 'I/P', 'A/B', 'M', 'S', 'G'].includes(t));
         const tag = rawTexts.length > 0 ? rawTexts.join('-') : 'S/N';
         
-        if (!items[name]) {
-          items[name] = { count: 0, tags: [] };
-        }
+        if (!items[name]) items[name] = { count: 0, tags: [] };
         items[name].count++;
         items[name].tags.push(tag);
       });
       
       const pipeCount = pipesLayer.querySelectorAll('.pipe-group').length;
 
-      let html = `
-        <div class="bom-modal" id="bom-modal-container">
+      let html = `<div class="bom-modal" id="bom-modal-container">
           <div class="bom-content">
             <div class="bom-header">
               <h2>📋 Lista de Materiales (BOM) P&ID</h2>
@@ -1095,34 +1156,17 @@
             </div>
             <div class="bom-table-container">
               <table class="bom-table">
-                <thead>
-                  <tr>
-                    <th style="width: 10%; text-align: center;">Cant.</th>
-                    <th style="width: 40%;">Tipo de Componente</th>
-                    <th style="width: 50%;">Tags / Identificadores</th>
-                  </tr>
-                </thead>
+                <thead><tr><th style="width: 10%; text-align: center;">Cant.</th><th style="width: 40%;">Tipo de Componente</th><th style="width: 50%;">Tags / Identificadores</th></tr></thead>
                 <tbody>`;
       
       for(let key in items) {
-        html += `<tr>
-                  <td style="text-align: center; font-weight: bold; color: #38bdf8;">${items[key].count}</td>
-                  <td>${key}</td>
-                  <td style="color: #94a3b8;">${items[key].tags.join(', ')}</td>
-                 </tr>`;
+        html += `<tr><td style="text-align: center; font-weight: bold; color: #38bdf8;">${items[key].count}</td><td>${key}</td><td style="color: #94a3b8;">${items[key].tags.join(', ')}</td></tr>`;
       }
       
-      html += `<tr>
-                <td style="text-align: center; font-weight: bold; color: #38bdf8;">${pipeCount}</td>
-                <td>Tramos de Tubería / Señal</td>
-                <td style="color: #94a3b8;">-</td>
-               </tr>`;
-               
-      html += `  </tbody>
-              </table>
+      html += `<tr><td style="text-align: center; font-weight: bold; color: #38bdf8;">${pipeCount}</td><td>Tramos de Tubería / Señal</td><td style="color: #94a3b8;">-</td></tr></tbody></table>
             </div>
             <div style="margin-top: 15px; text-align: right;">
-              <button class="btn-export" onclick="exportBOMCSV()">⬇️ Descargar a Excel (CSV)</button>
+              <button class="btn-export" onclick="exportBOMCSV()">⬇️ Descargar Excel (CSV)</button>
             </div>
           </div>
         </div>`;
@@ -1133,9 +1177,7 @@
     }
 
     function exportBOMCSV() {
-      // Usamos \uFEFF para que Excel reconozca el UTF-8 (Tildes y eñes)
       let csvContent = "\uFEFFCantidad,Tipo de Componente,Tags / Identificadores\n";
-      
       const elements = symbolsLayer.querySelectorAll('.symbol-group');
       const items = {};
       
@@ -1143,7 +1185,7 @@
         const type = el.getAttribute('data-type');
         const name = symbolDictionary[type] || 'Componente Genérico';
         const textNodes = el.querySelectorAll('text');
-        const rawTexts = Array.from(textNodes).map(t => t.textContent).filter(t => !['√', 'Σ', 'I/P', 'A/B', 'M', 'S'].includes(t));
+        const rawTexts = Array.from(textNodes).map(t => t.textContent).filter(t => !['√', 'Σ', 'I/P', 'A/B', 'M', 'S', 'G'].includes(t));
         const tag = rawTexts.length > 0 ? rawTexts.join('-') : 'S/N';
         
         if (!items[name]) items[name] = { count: 0, tags: [] };
@@ -1152,39 +1194,24 @@
       });
       
       for(let key in items) {
-        // Envolvemos en comillas por si hay comas en los tags
         csvContent += `${items[key].count},"${key}","${items[key].tags.join(', ')}"\n`;
       }
       
-      const pipeCount = pipesLayer.querySelectorAll('.pipe-group').length;
-      csvContent += `${pipeCount},"Tramos de Tubería / Señal","-"\n`;
-
+      csvContent += `${pipesLayer.querySelectorAll('.pipe-group').length},"Tramos de Tubería / Señal","-"\n`;
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.setAttribute("href", url);
+      link.setAttribute("href", URL.createObjectURL(blob));
       link.setAttribute("download", "Lista_Materiales_BOM.csv");
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
-    // GUARDAR Y CARGAR PROYECTO (JSON)
+    // JSON PROJECT EXPORT / IMPORT
     function saveProjectJSON() {
       clearSelection();
-      const projectData = {
-        version: "1.0",
-        date: new Date().toISOString(),
-        symbolsHTML: symbolsLayer.innerHTML,
-        pipesHTML: pipesLayer.innerHTML
-      };
-      const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'proyecto-pid.json';
-      a.click();
-      URL.revokeObjectURL(url);
+      const blob = new Blob([JSON.stringify({ version: "1.0", date: new Date().toISOString(), symbolsHTML: symbolsLayer.innerHTML, pipesHTML: pipesLayer.innerHTML }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'proyecto-pid.json'; a.click();
     }
 
     function loadProjectJSON(event) {
@@ -1204,48 +1231,21 @@
       event.target.value = '';
     }
 
-    function exportSVG() {
-      clearSelection();
-      const serializer = new XMLSerializer();
-      const source = serializer.serializeToString(canvas);
-      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'diagrama-isa-pid.svg';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
     function exportPNG() {
       clearSelection();
-      const serializer = new XMLSerializer();
-      const source = serializer.serializeToString(canvas);
       const img = new Image();
-      const svgBlob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
-
       img.onload = () => {
         const outCanvas = document.createElement('canvas');
-        outCanvas.width = canvas.clientWidth || 1400;
-        outCanvas.height = canvas.clientHeight || 900;
+        outCanvas.width = canvas.clientWidth || 1400; outCanvas.height = canvas.clientHeight || 900;
         const ctx = outCanvas.getContext('2d');
-        ctx.fillStyle = '#121217';
-        ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
+        ctx.fillStyle = '#121217'; ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
         ctx.drawImage(img, 0, 0);
-
-        const a = document.createElement('a');
-        a.download = 'diagrama-isa-pid.png';
-        a.href = outCanvas.toDataURL('image/png');
-        a.click();
-        URL.revokeObjectURL(url);
+        const a = document.createElement('a'); a.download = 'diagrama-isa-pid.png'; a.href = outCanvas.toDataURL('image/png'); a.click();
       };
-      img.src = url;
+      img.src = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(canvas)], { type: 'image/svg+xml;charset=utf-8' }));
     }
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
-    }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
   </script>
 </body>
 </html>
