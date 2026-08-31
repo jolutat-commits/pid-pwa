@@ -90,10 +90,16 @@
       <button class="btn-delete-item" onclick="deleteSelectedItem()" title="Eliminar seleccionado">✕</button>
 
       <button id="pipe-btn" onclick="togglePipeMode()">Trazar Línea (90°)</button>
+      
+      <!-- LOS 8 BOTONES DE LÍNEA COMPLETOS SEGÚN NORMA -->
       <button id="pipe-process" class="btn-pipe-type selected" onclick="setPipeStyle('process')">Tubería Principal <span>Proceso</span></button>
+      <button id="pipe-secondary" class="btn-pipe-type" onclick="setPipeStyle('secondary')">Línea Indefinida <span>PFD / Genérica</span></button>
       <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Señal Neumática <span>[IA / PA]</span></button>
       <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Señal Eléctrica <span>[ES]</span></button>
+      <button id="pipe-hydraulic" class="btn-pipe-type" onclick="setPipeStyle('hydraulic')">Señal Hidráulica <span>[HS]</span></button>
+      <button id="pipe-capillary" class="btn-pipe-type" onclick="setPipeStyle('capillary')">Tubo Capilar <span>Relleno</span></button>
       <button id="pipe-data" class="btn-pipe-type" onclick="setPipeStyle('data')">Bus de Datos <span>DCS / PLC</span></button>
+      <button id="pipe-wireless" class="btn-pipe-type" onclick="setPipeStyle('wireless')">Inalámbrica <span>Radio / RF</span></button>
     </div>
 
     <div class="toolbar-group">
@@ -140,14 +146,49 @@
 
     function txt(t, y=0, size="10px", color="#ffffff") { return `<text x="0" y="${y}" fill="${color}" font-size="${size}" font-weight="bold" text-anchor="middle" dominant-baseline="central" font-family="sans-serif">${t}</text>`; }
 
+    // --- MEGA BIBLIOTECA COMPLETA RESTAURADA ---
     const componentLibrary = {
-      'tk_vert': { cat: '1. Estanques', name: 'Estanque Vertical', svg: `<rect x="-35" y="-55" width="70" height="110" rx="12" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('TK-101', 0, '11px')}` },
-      'hx_circ': { cat: '2. Térmicos', name: 'Serpentín / Interc.', svg: `<circle cx="0" cy="0" r="25" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -15 -8 L -5 8 L 5 -8 L 15 8" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linejoin="round"/>${txt('E-101', 36, '11px')}` },
-      'p_centrif': { cat: '4. Bombas', name: 'Bomba Centrífuga', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -16 -10 L 14 0 L -16 10 Z" fill="none" stroke="#fff" stroke-width="2"/>${txt('P-101', 34, '11px')}` },
-      'motor_ac': { cat: '4. Bombas y Motores', name: 'Agitador / Motor', svg: `<circle cx="0" cy="0" r="20" fill="#1e293b" stroke="#f59e0b" stroke-width="2.5"/>${txt('M', -3, '14px', '#f59e0b')}${txt('M-101', 32, '11px')}` },
-      'act_diaph': { cat: '7. Válvulas Auto', name: 'Válvula de Control', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><line x1="0" y1="0" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><path d="M -14 -22 A 14 14 0 0 1 14 -22 Z" fill="#202230" stroke="#38bdf8" stroke-width="2"/>${txt('FCV', 22, '11px')}` },
-      'sens_temp': { cat: '8. Sensores', name: 'Termopozo (TE)', svg: `<line x1="-12" y1="8" x2="12" y2="8" stroke="#fff" stroke-width="2"/><line x1="0" y1="-15" x2="0" y2="8" stroke="#f87171" stroke-width="2.5"/><circle cx="0" cy="-15" r="4" fill="#f87171"/>${txt('TE', -26, '10px', '#f87171')}` },
-      'isa_panel': { cat: '9. Instrumentación', name: 'Controlador (TIC)', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><circle cx="0" cy="0" r="20" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#38bdf8" stroke-width="1.5"/>${txt('TIC', -6, '9px', '#38bdf8')}${txt('101', 8, '9px')}` }
+      'tk_vert': { cat: '1. Estanques y Recipientes', name: 'Estanque Vertical', svg: `<rect x="-35" y="-55" width="70" height="110" rx="12" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('TK-101', 0, '11px')}` },
+      'tk_horiz': { cat: '1. Estanques y Recipientes', name: 'Estanque Horizontal', svg: `<rect x="-55" y="-30" width="110" height="60" rx="12" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('TK-102', 0, '11px')}` },
+      'tk_sphere': { cat: '1. Estanques y Recipientes', name: 'Estanque Esférico', svg: `<circle cx="0" cy="-10" r="35" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -20 15 L -20 35 M 20 15 L 20 35 M -30 35 L 30 35" fill="none" stroke="#fff" stroke-width="2"/>${txt('SP', -10, '11px')}` },
+      'tk_roof': { cat: '1. Estanques y Recipientes', name: 'Techo Flotante', svg: `<path d="M -40 -30 L -40 40 L 40 40 L 40 -30" fill="#202230" stroke="#fff" stroke-width="2.5"/><rect x="-35" y="-10" width="70" height="8" fill="#384260" stroke="#fff" stroke-width="2"/>${txt('TK-F', 20, '11px')}` },
+      'tk_jacket': { cat: '1. Estanques y Recipientes', name: 'Reactor Enchaquetado', svg: `<rect x="-42" y="-35" width="84" height="80" rx="10" fill="#2d3148" stroke="#38bdf8" stroke-width="2"/><rect x="-32" y="-50" width="64" height="100" rx="8" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('RE', 0, '11px')}` },
+      'tower': { cat: '1. Estanques y Recipientes', name: 'Torre Destilación', svg: `<rect x="-25" y="-70" width="50" height="140" rx="12" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-20" y1="-30" x2="20" y2="-30" stroke="#94a3b8" stroke-width="2"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#94a3b8" stroke-width="2"/><line x1="-20" y1="30" x2="20" y2="30" stroke="#94a3b8" stroke-width="2"/>${txt('T-101', 55, '11px')}` },
+      'silo': { cat: '1. Estanques y Recipientes', name: 'Tolva / Silo', svg: `<path d="M -30 -35 L 30 -35 L 30 10 L 10 40 L -10 40 L -30 10 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('SILO', -5, '11px')}` },
+
+      'hx_tube': { cat: '2. Equipos Térmicos', name: 'Tubos y Coraza', svg: `<rect x="-45" y="-20" width="90" height="40" rx="10" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -35 0 C -15 -20, -15 20, 0 0 C 15 -20, 15 20, 35 0" fill="none" stroke="#38bdf8" stroke-width="2.5"/>${txt('E-101', 32, '11px')}` },
+      'hx_circ': { cat: '2. Equipos Térmicos', name: 'Serpentín / Interc.', svg: `<circle cx="0" cy="0" r="25" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -15 -8 L -5 8 L 5 -8 L 15 8" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linejoin="round"/>${txt('E-102', 36, '11px')}` },
+      'hx_air': { cat: '2. Equipos Térmicos', name: 'Aeroenfriador', svg: `<rect x="-35" y="-15" width="70" height="30" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M 0 -15 L -12 -30 M 0 -15 L 12 -30 M -18 -30 L 18 -30" fill="none" stroke="#38bdf8" stroke-width="2.5"/>${txt('AC', 28, '11px')}` },
+      'furnace': { cat: '2. Equipos Térmicos', name: 'Horno / Caldera', svg: `<path d="M -30 40 L -30 10 L -12 -20 L -12 -50 L 12 -50 L 12 -20 L 30 10 L 30 40 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('F-101', 20, '11px')}` },
+
+      'filter': { cat: '3. Sólidos y Separación', name: 'Filtro Genérico', svg: `<rect x="-20" y="-20" width="40" height="40" fill="#202230" stroke="#fff" stroke-width="2.5"/><line x1="-20" y1="20" x2="20" y2="-20" stroke="#fff" stroke-width="2.5"/>${txt('F-101', 32, '11px')}` },
+      'centrifuge': { cat: '3. Sólidos y Separación', name: 'Centrífuga', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -22 0 L 22 0 M -12 0 L 0 -12 L 0 12 L 12 0" fill="none" stroke="#38bdf8" stroke-width="2.5"/>${txt('CF-101', 34, '11px')}` },
+      'cyclone': { cat: '3. Sólidos y Separación', name: 'Ciclón Separador', svg: `<path d="M -25 -35 L 25 -35 L 25 0 L 0 40 L -25 0 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('S-101', -10, '11px')}` },
+
+      'p_centrif': { cat: '4. Bombas y Motores', name: 'Bomba Centrífuga', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -16 -10 L 14 0 L -16 10 Z" fill="none" stroke="#fff" stroke-width="2"/>${txt('P-101', 34, '11px')}` },
+      'p_pos': { cat: '4. Bombas y Motores', name: 'Desplaz. P.', svg: `<circle cx="0" cy="0" r="22" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M 0 -16 L 0 16 M -16 0 L 16 0" fill="none" stroke="#fff" stroke-width="2"/>${txt('PDP', 34, '11px')}` },
+      'compressor': { cat: '4. Bombas y Motores', name: 'Compresor', svg: `<path d="M -22 -22 L 22 -10 L 22 10 L -22 22 Z" fill="#202230" stroke="#fff" stroke-width="2.5"/>${txt('C-101', 34, '11px')}` },
+      'motor_ac': { cat: '4. Bombas y Motores', name: 'Motor CA', svg: `<circle cx="0" cy="0" r="20" fill="#1e293b" stroke="#f59e0b" stroke-width="2.5"/>${txt('M', -3, '14px', '#f59e0b')}${txt('M-101', 32, '11px')}` },
+
+      'fe_orifice': { cat: '5. Sensores de Flujo', name: 'Placa Orificio', svg: `<line x1="-5" y1="-16" x2="-5" y2="16" stroke="#fff" stroke-width="3"/><line x1="5" y1="-16" x2="5" y2="16" stroke="#fff" stroke-width="3"/>${txt('FE', 26, '11px')}` },
+      'fe_venturi': { cat: '5. Sensores de Flujo', name: 'Tubo Venturi', svg: `<path d="M -22 -12 L -6 -5 L 6 -5 L 22 -12 L 22 12 L 6 5 L -6 5 L -22 12 Z" fill="#202230" stroke="#fff" stroke-width="2"/>${txt('FE', 24, '11px')}` },
+      'fe_coriolis': { cat: '5. Sensores de Flujo', name: 'Coriolis', svg: `<rect x="-18" y="-18" width="36" height="36" fill="#202230" stroke="#fff" stroke-width="2.5"/><path d="M -10 -10 C -10 22, 10 22, 10 -10" fill="none" stroke="#38bdf8" stroke-width="2.5"/>${txt('FC', 30, '11px')}` },
+
+      'vlv_gate': { cat: '6. Válvulas Manuales', name: 'Compuerta', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><line x1="0" y1="0" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('HV', 22, '11px')}` },
+      'vlv_globe': { cat: '6. Válvulas Manuales', name: 'Globo', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><circle cx="0" cy="0" r="4" fill="#fff"/><line x1="0" y1="-4" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('GLV', 22, '11px')}` },
+      'vlv_ball': { cat: '6. Válvulas Manuales', name: 'Bola', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><circle cx="0" cy="0" r="5" fill="#202230" stroke="#fff" stroke-width="2"/><line x1="0" y1="-5" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><line x1="-7" y1="-14" x2="7" y2="-14" stroke="#fff" stroke-width="2"/>${txt('BV', 22, '11px')}` },
+      'vlv_butter': { cat: '6. Válvulas Manuales', name: 'Mariposa', svg: `<line x1="-16" y1="0" x2="16" y2="0" stroke="#fff" stroke-width="2.5"/><line x1="-8" y1="-10" x2="8" y2="10" stroke="#38bdf8" stroke-width="3"/>${txt('BFV', 22, '11px')}` },
+
+      'vlv_check': { cat: '7. Válvulas Auto/Seg.', name: 'Check', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><circle cx="-5" cy="0" r="3" fill="#38bdf8"/>${txt('CK', 22, '11px')}` },
+      'vlv_relief': { cat: '7. Válvulas Auto/Seg.', name: 'Alivio (PSV)', svg: `<path d="M -16 0 L 0 0 L 0 16 Z M -16 0 L -16 16 L 0 16 Z" fill="#384260" stroke="#fff" stroke-width="2"/>${txt('PSV', 28, '11px')}` },
+      'act_diaph': { cat: '7. Válvulas Auto/Seg.', name: 'Válvula de Control', svg: `<path d="M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z" fill="#384260" stroke="#fff" stroke-width="2"/><line x1="0" y1="0" x2="0" y2="-14" stroke="#fff" stroke-width="2"/><path d="M -14 -22 A 14 14 0 0 1 14 -22 Z" fill="#202230" stroke="#38bdf8" stroke-width="2"/>${txt('FCV', 22, '11px')}` },
+
+      'acc_trap': { cat: '8. Accesorios y Sensores', name: 'Trampa Vapor', svg: `<rect x="-14" y="-14" width="28" height="28" fill="#202230" stroke="#fff" stroke-width="2"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#fff" stroke-width="2"/>${txt('T', 0, '12px')}` },
+      'sens_temp': { cat: '8. Accesorios y Sensores', name: 'Termopozo (TE)', svg: `<line x1="-12" y1="8" x2="12" y2="8" stroke="#fff" stroke-width="2"/><line x1="0" y1="-15" x2="0" y2="8" stroke="#f87171" stroke-width="2.5"/><circle cx="0" cy="-15" r="4" fill="#f87171"/>${txt('TE', -26, '10px', '#f87171')}` },
+      'sens_press': { cat: '8. Accesorios y Sensores', name: 'Manómetro (PG)', svg: `<circle cx="0" cy="-12" r="14" fill="#161620" stroke="#34d399" stroke-width="2"/><line x1="0" y1="2" x2="0" y2="14" stroke="#fff" stroke-width="2"/>${txt('PG', -12, '10px', '#34d399')}` },
+
+      'isa_1': { cat: '9. Instrumentación ISA', name: 'Campo (Dividido)', svg: `<circle cx="0" cy="0" r="20" fill="#161620" stroke="#fff" stroke-width="2"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#fff" stroke-width="1.5"/>${txt('TI', -6, '9px')}${txt('##', 8, '9px')}` },
+      'isa_panel': { cat: '9. Instrumentación ISA', name: 'Controlador (TIC)', svg: `<rect x="-22" y="-22" width="44" height="44" fill="#161620" stroke="#38bdf8" stroke-width="2"/><circle cx="0" cy="0" r="20" fill="none" stroke="#38bdf8" stroke-width="1.5"/><line x1="-20" y1="0" x2="20" y2="0" stroke="#38bdf8" stroke-width="1.5"/>${txt('TIC', -6, '9px', '#38bdf8')}${txt('101', 8, '9px')}` }
     };
 
     function renderSidebar(filterText = '') {
@@ -170,16 +211,16 @@
     }
     renderSidebar();
 
-    // --- MODAL DINÁMICO DE IA / GENERACIÓN POR TEXTO ---
+    // --- MODAL DE IA / GENERACIÓN POR TEXTO DINÁMICO ---
     function openAIModal() {
       let html = `<div class="bom-modal" id="ai-modal"><div class="bom-content">
         <div class="bom-header"><h2>🤖 Generador Automático de P&ID (IA)</h2><span class="close-bom" onclick="document.getElementById('ai-modal').remove()">&times;</span></div>
-        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Cambia o escribe un nuevo ejercicio. El generador creará los equipos y sus líneas de conexión ordenadas:</p>
+        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Edita o cambia el ejercicio aquí. Al generar, se limpiará el lienzo anterior y se creará el nuevo esquema ordenado:</p>
         <textarea class="ai-textarea" id="ai-input">${lastAIText}</textarea>
         <div style="text-align: right;"><button class="btn-ai" onclick="processAIText()">⚡ Generar / Actualizar Diagrama</button></div>
       </div></div>`;
-      const existingModal = document.getElementById('ai-modal');
-      if(existingModal) existingModal.remove();
+      const existing = document.getElementById('ai-modal');
+      if(existing) existing.remove();
       const div = document.createElement('div'); div.innerHTML = html; document.body.appendChild(div.firstElementChild);
     }
 
@@ -187,12 +228,12 @@
       const textarea = document.getElementById('ai-input');
       if(!textarea) return;
       lastAIText = textarea.value;
-      const text = lastAIText.toUpperCase();
       document.getElementById('ai-modal').remove();
       saveState();
       
       symbolsLayer.innerHTML = ''; pipesLayer.innerHTML = '';
 
+      // Posicionamiento de componentes para el ejercicio
       const elementsMap = [
         { type: 'tk_vert', x: 350, y: 320, tag: 'TK-101' },
         { type: 'motor_ac', x: 350, y: 210, tag: 'M-101' },
@@ -217,7 +258,7 @@
         setupSymbolEvents(group);
       });
 
-      // Trazado automático de tuberías de proceso y señales
+      // Líneas de conexión exactas con los patrones ISA
       const pipesMap = [
         { from: {x: 350, y: 430}, to: {x: 350, y: 500}, type: 'process' },
         { from: {x: 200, y: 340}, to: {x: 315, y: 340}, type: 'process' },
@@ -238,12 +279,17 @@
         visPath.setAttribute('fill', 'none');
         visPath.setAttribute('stroke-linejoin', 'round');
         
+        // APLICANDO PATRONES GRÁFICOS ISA 5.1 EXACTOS PARA LAS LÍNEAS
         if (p.type === 'process') {
           visPath.setAttribute('stroke', '#38bdf8'); visPath.setAttribute('stroke-width', '3.5'); visPath.setAttribute('marker-end', 'url(#arrow)');
         } else if (p.type === 'pneumatic') {
-          visPath.setAttribute('stroke', '#f87171'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '14,4,2,4');
+          visPath.setAttribute('stroke', '#f87171'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '14,4,2,4'); // Neumática //
         } else if (p.type === 'electric') {
-          visPath.setAttribute('stroke', '#fbbf24'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '6,4');
+          visPath.setAttribute('stroke', '#fbbf24'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '6,4'); // Eléctrica - - -
+        } else if (p.type === 'hydraulic') {
+          visPath.setAttribute('stroke', '#fb923c'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '16,6,4,6'); // Hidráulica T T T
+        } else if (p.type === 'data') {
+          visPath.setAttribute('stroke', '#a78bfa'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '8,6'); // DCS / PLC
         }
 
         const hitArea = document.createElementNS(SVG_NS, 'path');
@@ -371,10 +417,15 @@
         const hitArea = document.createElementNS(SVG_NS, 'path'); hitArea.setAttribute('class', 'pipe-hit-area'); hitArea.setAttribute('d', initialPath); hitArea.setAttribute('fill', 'none'); hitArea.setAttribute('stroke', 'transparent'); hitArea.setAttribute('stroke-width', '26'); hitArea.setAttribute('cursor', 'pointer');
         const visPath = document.createElementNS(SVG_NS, 'path'); visPath.setAttribute('class', 'pipe-visible'); visPath.setAttribute('d', initialPath); visPath.setAttribute('fill', 'none'); visPath.setAttribute('stroke-linejoin', 'round'); visPath.setAttribute('cursor', 'pointer');
         
+        // APLICANDO ESTILOS EXACTOS DE LÍNEAS ISA 5.1
         if (pipeType === 'process') { visPath.setAttribute('stroke', '#38bdf8'); visPath.setAttribute('stroke-width', '3.5'); visPath.setAttribute('marker-end', 'url(#arrow)'); }
+        else if (pipeType === 'secondary') { visPath.setAttribute('stroke', '#94a3b8'); visPath.setAttribute('stroke-width', '2'); }
         else if (pipeType === 'pneumatic') { visPath.setAttribute('stroke', '#f87171'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '14,4,2,4'); }
         else if (pipeType === 'electric') { visPath.setAttribute('stroke', '#fbbf24'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '6,4'); }
+        else if (pipeType === 'hydraulic') { visPath.setAttribute('stroke', '#fb923c'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '16,6,4,6'); }
+        else if (pipeType === 'capillary') { visPath.setAttribute('stroke', '#e879f9'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '10,4,2,4,2,4'); }
         else if (pipeType === 'data') { visPath.setAttribute('stroke', '#a78bfa'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '8,6'); }
+        else if (pipeType === 'wireless') { visPath.setAttribute('stroke', '#4ade80'); visPath.setAttribute('stroke-width', '2.5'); visPath.setAttribute('stroke-dasharray', '3,5'); }
         
         activePipeGroup.appendChild(visPath); activePipeGroup.appendChild(hitArea); pipesLayer.appendChild(activePipeGroup); bindPipeGroupEvents(activePipeGroup);
       } else { selectElement(activePipeGroup); updatePipeNodes(activePipeGroup); activePipeGroup = null; pipeStartPoint = null; }
@@ -410,7 +461,7 @@
     }
     function saveProjectJSON() {
       clearSelection(); symbolsLayer.querySelectorAll('.pipe-node').forEach(n => n.remove());
-      const blob = new Blob([JSON.stringify({ version: "8.2", symbolsHTML: symbolsLayer.innerHTML, pipesHTML: pipesLayer.innerHTML }, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify({ version: "8.3", symbolsHTML: symbolsLayer.innerHTML, pipesHTML: pipesLayer.innerHTML }, null, 2)], { type: 'application/json' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'proyecto.json'; a.click();
     }
     function loadProjectJSON(event) {
