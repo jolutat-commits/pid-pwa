@@ -27,14 +27,14 @@
 
     header {
       background-color: #1a1a24;
-      padding: 8px 14px;
+      padding: 8px 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid #2e2e40;
       z-index: 100;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
     }
 
     .toolbar-group {
@@ -48,7 +48,7 @@
       background-color: #282a3a;
       color: #e2e8f0;
       border: 1px solid #3f4259;
-      padding: 5px 10px;
+      padding: 5px 9px;
       border-radius: 5px;
       cursor: pointer;
       font-size: 11px;
@@ -80,6 +80,16 @@
       border-color: #38bdf8;
       background-color: #0284c7;
       color: #ffffff;
+    }
+
+    .btn-history {
+      background-color: #334155;
+      border-color: #475569;
+    }
+
+    .btn-project {
+      background-color: #475569;
+      border-color: #64748b;
     }
 
     .btn-delete-item {
@@ -195,30 +205,42 @@
     .pipe-group.is-selected .pipe-visible {
       stroke: #facc15 !important;
       stroke-width: 4.5px !important;
+      marker-end: url(#arrow-selected) !important;
+    }
+    .pipe-group.is-selected text {
+      fill: #facc15 !important;
     }
   </style>
 </head>
 <body>
 
-  <!-- BARRA SUPERIOR CON TODAS LAS SEÑALES ISA S5.1 -->
+  <!-- BARRA SUPERIOR -->
   <header>
     <div class="toolbar-group">
-      <button id="pipe-btn" onclick="togglePipeMode()">Trazar Trazo</button>
+      <!-- HISTORIAL -->
+      <button class="btn-history" onclick="undoAction()" title="Deshacer (Ctrl + Z)">↶ Deshacer</button>
+      <button class="btn-history" onclick="redoAction()" title="Rehacer (Ctrl + Y)">↷ Rehacer</button>
+
+      <!-- TRAZADO ORTOGONAL -->
+      <button id="pipe-btn" onclick="togglePipeMode()">Trazar Trazo (90°)</button>
       <span style="font-size: 11px; color:#94a3b8;">Tipo:</span>
       <button id="pipe-process" class="btn-pipe-type selected" onclick="setPipeStyle('process')">Tubería Principal</button>
       <button id="pipe-secondary" class="btn-pipe-type" onclick="setPipeStyle('secondary')">Tubería Auxiliar</button>
       <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Eléctrica (---)</button>
       <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Neumática (//)</button>
       <button id="pipe-hydraulic" class="btn-pipe-type" onclick="setPipeStyle('hydraulic')">Hidráulica (-T-)</button>
-      <button id="pipe-capillary" class="btn-pipe-type" onclick="setPipeStyle('capillary')">Capilar (-X-)</button>
       <button id="pipe-data" class="btn-pipe-type" onclick="setPipeStyle('data')">Bus Datos (-o-)</button>
-      <button id="pipe-wireless" class="btn-pipe-type" onclick="setPipeStyle('wireless')">Inalámbrica (~)</button>
-      <button id="pipe-air" class="btn-pipe-type" onclick="setPipeStyle('air')">Aire IA</button>
       
+      <!-- EDICIÓN -->
       <button class="btn-delete-item" onclick="deleteSelectedItem()" title="Eliminar seleccionado (o tecla Supr / Delete)">✕ Eliminar</button>
       <button class="btn-danger" onclick="clearCanvas()">Limpiar</button>
     </div>
+
+    <!-- PROYECTO Y EXPORTACIÓN -->
     <div class="toolbar-group">
+      <button class="btn-project" onclick="saveProjectJSON()">💾 Guardar JSON</button>
+      <button class="btn-project" onclick="document.getElementById('load-json-input').click()">📂 Cargar JSON</button>
+      <input type="file" id="load-json-input" style="display: none;" accept=".json" onchange="loadProjectJSON(event)">
       <button class="btn-export" onclick="exportSVG()">Exportar SVG</button>
       <button class="btn-export" onclick="exportPNG()">Exportar PNG</button>
     </div>
@@ -309,6 +331,9 @@
           <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
           </marker>
+          <marker id="arrow-selected" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#facc15" />
+          </marker>
         </defs>
         <g id="pipes-layer"></g>
         <g id="symbols-layer"></g>
@@ -325,10 +350,72 @@
     const SVG_NS = "http://www.w3.org/2000/svg";
     let isPipeMode = false;
     let pipeType = 'process';
+    let pipeStartPoint = null;
     let activePipeGroup = null;
     let draggingElement = null;
     let selectedTarget = null;
     let offset = { x: 0, y: 0 };
+
+    // HISTORIAL DESHACER / REHACER
+    const undoStack = [];
+    const redoStack = [];
+
+    function saveState() {
+      const state = {
+        symbols: symbolsLayer.innerHTML,
+        pipes: pipesLayer.innerHTML
+      };
+      undoStack.push(state);
+      if (undoStack.length > 30) undoStack.shift();
+      redoStack.length = 0; // Limpiar rehacer
+    }
+
+    function undoAction() {
+      if (undoStack.length === 0) return;
+      const currentState = {
+        symbols: symbolsLayer.innerHTML,
+        pipes: pipesLayer.innerHTML
+      };
+      redoStack.push(currentState);
+      const prevState = undoStack.pop();
+      restoreLayers(prevState);
+    }
+
+    function redoAction() {
+      if (redoStack.length === 0) return;
+      const currentState = {
+        symbols: symbolsLayer.innerHTML,
+        pipes: pipesLayer.innerHTML
+      };
+      undoStack.push(currentState);
+      const nextState = redoStack.pop();
+      restoreLayers(nextState);
+    }
+
+    function restoreLayers(state) {
+      clearSelection();
+      symbolsLayer.innerHTML = state.symbols;
+      pipesLayer.innerHTML = state.pipes;
+      // Re-vincular eventos a todos los elementos restaurados
+      symbolsLayer.querySelectorAll('.symbol-group').forEach(setupSymbolEvents);
+      pipesLayer.querySelectorAll('.pipe-group').forEach(bindPipeGroupEvents);
+    }
+
+    // Atajos de teclado para Undo/Redo y Delete
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redoAction();
+        else undoAction();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redoAction();
+      } else if (e.key === 'Delete' || e.key === 'Backspace' || e.key === 'Supr') {
+        if (selectedTarget && document.activeElement.tagName !== 'INPUT') {
+          deleteSelectedItem();
+        }
+      }
+    });
 
     function getCoords(evt) {
       const rect = canvas.getBoundingClientRect();
@@ -351,9 +438,9 @@
       return el;
     }
 
-    // SELECCIÓN Y ELIMINACIÓN
+    // SELECCIÓN Y BORRADO
     function selectElement(elem) {
-      if (selectedTarget) {
+      if (selectedTarget && selectedTarget !== elem) {
         selectedTarget.classList.remove('is-selected');
       }
       selectedTarget = elem;
@@ -371,26 +458,27 @@
 
     function deleteSelectedItem() {
       if (selectedTarget) {
+        saveState();
         selectedTarget.remove();
         selectedTarget = null;
       }
     }
 
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Delete' || e.key === 'Backspace' || e.key === 'Supr') {
-        if (selectedTarget && document.activeElement.tagName !== 'INPUT') {
-          deleteSelectedItem();
-        }
-      }
-    });
-
     canvas.addEventListener('mousedown', (e) => {
-      if (e.target === canvas) {
+      if (e.target === canvas && !isPipeMode) {
         clearSelection();
       }
     });
 
+    // GENERADOR DE RUTA ORTOGONAL (90°)
+    function generateOrthogonalPath(x1, y1, x2, y2) {
+      const midX = Math.round(x1 + (x2 - x1) / 2);
+      return `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+    }
+
+    // CATÁLOGO DE SÍMBOLOS
     function addSymbol(type) {
+      saveState();
       const rect = canvas.getBoundingClientRect();
       const posX = rect.width ? rect.width / 2 : 320;
       const posY = rect.height ? rect.height / 2 : 260;
@@ -545,7 +633,7 @@
         group.appendChild(belt); group.appendChild(c1); group.appendChild(c2);
       }
 
-      // 3. ELEMENTOS PRIMARIOS
+      // 3. SENSORES PRIMARIOS
       else if (type === 'elem_orifice') {
         const l1 = document.createElementNS(SVG_NS, 'line');
         l1.setAttribute('x1', '-6'); l1.setAttribute('y1', '-18'); l1.setAttribute('x2', '-6'); l1.setAttribute('y2', '18');
@@ -824,6 +912,7 @@
         if (texts.length > 0) {
           const val = prompt('Editar texto / tag:', texts[0].textContent);
           if (val !== null && val.trim() !== '') {
+            saveState();
             texts[0].textContent = val.trim();
           }
         }
@@ -833,6 +922,7 @@
         e.preventDefault();
         e.stopPropagation();
         if (confirm('¿Eliminar este componente?')) {
+          saveState();
           if (selectedTarget === elem) selectedTarget = null;
           elem.remove();
         }
@@ -846,22 +936,18 @@
         const nx = Math.round((pos.x - offset.x) / 10) * 10;
         const ny = Math.round((pos.y - offset.y) / 10) * 10;
         draggingElement.setAttribute('transform', `translate(${nx}, ${ny})`);
-      } else if (activePipeGroup && isPipeMode) {
-        const lines = activePipeGroup.querySelectorAll('line');
-        lines.forEach(l => {
-          l.setAttribute('x2', pos.x);
-          l.setAttribute('y2', pos.y);
-        });
-        const txt = activePipeGroup.querySelector('text');
-        if (txt) {
-          txt.setAttribute('x', (parseFloat(lines[0].getAttribute('x1')) + pos.x) / 2);
-          txt.setAttribute('y', (parseFloat(lines[0].getAttribute('y1')) + pos.y) / 2 - 8);
-        }
+      } else if (activePipeGroup && isPipeMode && pipeStartPoint) {
+        const pathData = generateOrthogonalPath(pipeStartPoint.x, pipeStartPoint.y, pos.x, pos.y);
+        const paths = activePipeGroup.querySelectorAll('path');
+        paths.forEach(p => p.setAttribute('d', pathData));
       }
     }
 
     function handleEnd() {
-      draggingElement = null;
+      if (draggingElement) {
+        saveState();
+        draggingElement = null;
+      }
     }
 
     canvas.addEventListener('mousemove', handleMove);
@@ -872,9 +958,10 @@
     function togglePipeMode() {
       isPipeMode = !isPipeMode;
       pipeBtn.classList.toggle('active-mode', isPipeMode);
-      pipeBtn.textContent = isPipeMode ? 'Modo Trazado (Activo)' : 'Trazar Trazo';
+      pipeBtn.textContent = isPipeMode ? 'Modo Trazado 90° (Activo)' : 'Trazar Trazo (90°)';
       canvas.style.cursor = isPipeMode ? 'cell' : 'crosshair';
       activePipeGroup = null;
+      pipeStartPoint = null;
       clearSelection();
     }
 
@@ -884,108 +971,148 @@
       document.getElementById(`pipe-${type}`).classList.add('selected');
     }
 
-    // TRAZADO COMPLETO CON CATÁLOGO ISA S5.1
+    function bindPipeGroupEvents(group) {
+      group.addEventListener('mousedown', (evt) => {
+        if (!isPipeMode) {
+          evt.stopPropagation();
+          selectElement(group);
+        }
+      });
+
+      group.addEventListener('contextmenu', (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        if (confirm('¿Eliminar este tramo completo de tubería/línea?')) {
+          saveState();
+          if (selectedTarget === group) selectedTarget = null;
+          group.remove();
+        }
+      });
+    }
+
+    // TRAZADO ORTOGONAL DE LÍNEAS
     canvas.addEventListener('mousedown', (e) => {
       if (!isPipeMode || e.target.closest('.symbol-group')) return;
       const pos = getCoords(e);
 
       if (!activePipeGroup) {
+        saveState();
+        pipeStartPoint = { x: pos.x, y: pos.y };
         activePipeGroup = document.createElementNS(SVG_NS, 'g');
         activePipeGroup.setAttribute('class', 'pipe-group');
 
-        const hitArea = document.createElementNS(SVG_NS, 'line');
+        const initialPath = generateOrthogonalPath(pos.x, pos.y, pos.x, pos.y);
+
+        // Trazo invisible de selección
+        const hitArea = document.createElementNS(SVG_NS, 'path');
         hitArea.setAttribute('class', 'pipe-hit-area');
-        hitArea.setAttribute('x1', pos.x);
-        hitArea.setAttribute('y1', pos.y);
-        hitArea.setAttribute('x2', pos.x);
-        hitArea.setAttribute('y2', pos.y);
+        hitArea.setAttribute('d', initialPath);
+        hitArea.setAttribute('fill', 'none');
         hitArea.setAttribute('stroke', 'transparent');
-        hitArea.setAttribute('stroke-width', '24');
+        hitArea.setAttribute('stroke-width', '26');
+        hitArea.setAttribute('stroke-linejoin', 'round');
         hitArea.setAttribute('cursor', 'pointer');
 
-        const visLine = document.createElementNS(SVG_NS, 'line');
-        visLine.setAttribute('class', 'pipe-visible');
-        visLine.setAttribute('x1', pos.x);
-        visLine.setAttribute('y1', pos.y);
-        visLine.setAttribute('x2', pos.x);
-        visLine.setAttribute('y2', pos.y);
-        visLine.setAttribute('cursor', 'pointer');
+        // Trazo visible
+        const visPath = document.createElementNS(SVG_NS, 'path');
+        visPath.setAttribute('class', 'pipe-visible');
+        visPath.setAttribute('d', initialPath);
+        visPath.setAttribute('fill', 'none');
+        visPath.setAttribute('stroke-linejoin', 'round');
+        visPath.setAttribute('cursor', 'pointer');
 
-        // APLICACIÓN DE ESTILOS SEGÚN NORMA ISA
         if (pipeType === 'process') {
-          visLine.setAttribute('stroke', '#38bdf8');
-          visLine.setAttribute('stroke-width', '3.5');
-          visLine.setAttribute('marker-end', 'url(#arrow)');
+          visPath.setAttribute('stroke', '#38bdf8');
+          visPath.setAttribute('stroke-width', '3.5');
+          visPath.setAttribute('marker-end', 'url(#arrow)');
         } else if (pipeType === 'secondary') {
-          visLine.setAttribute('stroke', '#94a3b8');
-          visLine.setAttribute('stroke-width', '2');
+          visPath.setAttribute('stroke', '#94a3b8');
+          visPath.setAttribute('stroke-width', '2');
         } else if (pipeType === 'electric') {
-          visLine.setAttribute('stroke', '#fbbf24');
-          visLine.setAttribute('stroke-width', '2');
-          visLine.setAttribute('stroke-dasharray', '6,4');
+          visPath.setAttribute('stroke', '#fbbf24');
+          visPath.setAttribute('stroke-width', '2');
+          visPath.setAttribute('stroke-dasharray', '6,4');
         } else if (pipeType === 'pneumatic') {
-          visLine.setAttribute('stroke', '#f87171');
-          visLine.setAttribute('stroke-width', '2');
-          visLine.setAttribute('stroke-dasharray', '14,4,2,4');
+          visPath.setAttribute('stroke', '#f87171');
+          visPath.setAttribute('stroke-width', '2');
+          visPath.setAttribute('stroke-dasharray', '14,4,2,4');
         } else if (pipeType === 'hydraulic') {
-          visLine.setAttribute('stroke', '#fb923c');
-          visLine.setAttribute('stroke-width', '2');
-          visLine.setAttribute('stroke-dasharray', '16,6,4,6');
-        } else if (pipeType === 'capillary') {
-          visLine.setAttribute('stroke', '#e879f9');
-          visLine.setAttribute('stroke-width', '2');
-          visLine.setAttribute('stroke-dasharray', '10,4,2,4,2,4');
+          visPath.setAttribute('stroke', '#fb923c');
+          visPath.setAttribute('stroke-width', '2');
+          visPath.setAttribute('stroke-dasharray', '16,6,4,6');
         } else if (pipeType === 'data') {
-          visLine.setAttribute('stroke', '#a78bfa');
-          visLine.setAttribute('stroke-width', '2');
-          visLine.setAttribute('stroke-dasharray', '8,6');
-        } else if (pipeType === 'wireless') {
-          visLine.setAttribute('stroke', '#4ade80');
-          visLine.setAttribute('stroke-width', '2.5');
-          visLine.setAttribute('stroke-dasharray', '3,5');
-        } else if (pipeType === 'air') {
-          visLine.setAttribute('stroke', '#38bdf8');
-          visLine.setAttribute('stroke-width', '2');
-          const txt = createSVGText('IA', pos.x, pos.y - 8, '#38bdf8', '10px', 'bold');
-          activePipeGroup.appendChild(txt);
+          visPath.setAttribute('stroke', '#a78bfa');
+          visPath.setAttribute('stroke-width', '2');
+          visPath.setAttribute('stroke-dasharray', '8,6');
         }
 
-        activePipeGroup.appendChild(visLine);
+        activePipeGroup.appendChild(visPath);
         activePipeGroup.appendChild(hitArea);
         pipesLayer.appendChild(activePipeGroup);
 
-        const bindPipe = (elem) => {
-          elem.addEventListener('mousedown', (evt) => {
-            if (!isPipeMode) {
-              evt.stopPropagation();
-              selectElement(elem);
-            }
-          });
-
-          elem.addEventListener('contextmenu', (evt) => {
-            evt.preventDefault();
-            evt.stopPropagation();
-            if (confirm('¿Eliminar este tramo de línea/tubería?')) {
-              if (selectedTarget === elem) selectedTarget = null;
-              elem.remove();
-            }
-          });
-        };
-
-        bindPipe(activePipeGroup);
+        bindPipeGroupEvents(activePipeGroup);
 
       } else {
+        // Fijar el final
+        selectElement(activePipeGroup);
         activePipeGroup = null;
+        pipeStartPoint = null;
       }
     });
 
     function clearCanvas() {
       if (confirm('¿Deseas vaciar todo el diagrama?')) {
+        saveState();
         symbolsLayer.innerHTML = '';
         pipesLayer.innerHTML = '';
         activePipeGroup = null;
         selectedTarget = null;
       }
+    }
+
+    // GUARDAR Y CARGAR PROYECTO (JSON LOCAL)
+    function saveProjectJSON() {
+      clearSelection();
+      const projectData = {
+        version: "1.0",
+        date: new Date().toISOString(),
+        symbolsHTML: symbolsLayer.innerHTML,
+        pipesHTML: pipesLayer.innerHTML
+      };
+
+      const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'proyecto-pid.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function loadProjectJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.symbolsHTML !== undefined && data.pipesHTML !== undefined) {
+            saveState();
+            restoreLayers({
+              symbols: data.symbolsHTML,
+              pipes: data.pipesHTML
+            });
+            alert('¡Proyecto cargado exitosamente!');
+          } else {
+            alert('Formato de archivo JSON no válido para P&ID Studio.');
+          }
+        } catch (err) {
+          alert('Error al leer el archivo JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = ''; // Reset input
     }
 
     function exportSVG() {
