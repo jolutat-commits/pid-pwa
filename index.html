@@ -15,8 +15,11 @@
     button:active { transform: scale(0.96); }
     button.active-mode { background-color: #10b981 !important; border-color: #059669 !important; color: #ffffff !important; }
 
-    .btn-pipe-type { background-color: #181822; font-size: 10px; padding: 4px 6px; }
+    /* ESTILO PARA LOS NUEVOS BOTONES DE LÍNEA SEGÚN NORMA 5.5 */
+    .btn-pipe-type { background-color: #181822; font-size: 10px; padding: 4px 7px; display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+    .btn-pipe-type span { font-size: 8px; color: #94a3b8; }
     .btn-pipe-type.selected { border-color: #38bdf8; background-color: #0284c7; color: #ffffff; }
+    .btn-pipe-type.selected span { color: #e0f2fe; }
     
     .btn-history { background-color: #334155; border-color: #475569; }
     .btn-project { background-color: #475569; border-color: #64748b; }
@@ -57,7 +60,6 @@
     .pipe-group { cursor: pointer; }
     .symbol-group.is-selected { outline: 2px dashed #facc15 !important; outline-offset: 4px; }
     
-    /* ESTILOS DE NODOS DE CONTROL PARA TUBERÍAS */
     .pipe-node { fill: #facc15; stroke: #121217; stroke-width: 2px; cursor: move; display: none; }
     .pipe-group.is-selected .pipe-node { display: block; }
     .pipe-group.is-selected .pipe-visible { stroke: #facc15 !important; stroke-width: 4px !important; }
@@ -83,14 +85,16 @@
       <button class="btn-delete-item" onclick="deleteSelectedItem()" title="Eliminar seleccionado">✕</button>
 
       <button id="pipe-btn" onclick="togglePipeMode()">Trazar Línea (90°)</button>
-      <button id="pipe-process" class="btn-pipe-type selected" onclick="setPipeStyle('process')">Tubería</button>
-      <button id="pipe-secondary" class="btn-pipe-type" onclick="setPipeStyle('secondary')">Secund.</button>
-      <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Eléctrica</button>
-      <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Neumática</button>
-      <button id="pipe-hydraulic" class="btn-pipe-type" onclick="setPipeStyle('hydraulic')">Hidráulica</button>
-      <button id="pipe-capillary" class="btn-pipe-type" onclick="setPipeStyle('capillary')">Capilar</button>
-      <button id="pipe-data" class="btn-pipe-type" onclick="setPipeStyle('data')">Datos</button>
-      <button id="pipe-wireless" class="btn-pipe-type" onclick="setPipeStyle('wireless')">Inalámb.</button>
+      
+      <!-- LÍNEAS ACTUALIZADAS AL ITEM 5.5 DE LA NORMA ANSI/ISA-5.1-2024 -->
+      <button id="pipe-process" class="btn-pipe-type selected" onclick="setPipeStyle('process')">Tubería Principal <span>Proceso</span></button>
+      <button id="pipe-secondary" class="btn-pipe-type" onclick="setPipeStyle('secondary')">Línea Indefinida <span>PFD / Genérica</span></button>
+      <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Señal Neumática <span>[IA / PA]</span></button>
+      <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Señal Eléctrica <span>[ES]</span></button>
+      <button id="pipe-hydraulic" class="btn-pipe-type" onclick="setPipeStyle('hydraulic')">Señal Hidráulica <span>[HS]</span></button>
+      <button id="pipe-capillary" class="btn-pipe-type" onclick="setPipeStyle('capillary')">Tubo Capilar <span>Relleno</span></button>
+      <button id="pipe-data" class="btn-pipe-type" onclick="setPipeStyle('data')">Bus de Datos / DCS <span>Comunicaciones</span></button>
+      <button id="pipe-wireless" class="btn-pipe-type" onclick="setPipeStyle('wireless')">Inalámbrica <span>Electromagnética</span></button>
     </div>
 
     <div class="toolbar-group">
@@ -257,7 +261,6 @@
       const pts = d.match(/[0-9.-]+/g);
       if (!pts || pts.length < 4) return;
 
-      // Extraer puntos clave (inicio, quiebres y fin) de la ruta ortogonal
       const coords = [];
       for (let i = 0; i < pts.length; i += 2) {
         coords.push({ x: parseFloat(pts[i]), y: parseFloat(pts[i+1]) });
@@ -322,7 +325,6 @@
         const { group, index, coords } = draggingNode;
         coords[index] = { x: Math.round(pos.x / 5) * 5, y: Math.round(pos.y / 5) * 5 };
         
-        // Reconstruir ruta ortogonal moviendo el nodo seleccionado al lado de estanques u otros equipos
         let newD = `M ${coords[0].x} ${coords[0].y}`;
         for (let i = 1; i < coords.length; i++) {
           newD += ` L ${coords[i].x} ${coords[i].y}`;
