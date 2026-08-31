@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>P&ID Studio Pro</title>
+  <title>P&ID Studio Pro - ISA S5.1</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1e1e24">
+  <meta name="theme-color" content="#121217">
   <style>
     * {
       box-sizing: border-box;
@@ -15,8 +15,8 @@
     }
 
     html, body {
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background-color: #121217;
@@ -26,39 +26,39 @@
     }
 
     header {
-      background-color: #1f1f2e;
-      padding: 10px 16px;
+      background-color: #1a1a24;
+      padding: 8px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      border-bottom: 2px solid #33334d;
+      border-bottom: 2px solid #2e2e40;
       z-index: 100;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .toolbar-group {
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 6px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     button {
-      background-color: #2e3047;
-      color: #ffffff;
-      border: 1px solid #4a4d70;
-      padding: 8px 14px;
+      background-color: #282a3a;
+      color: #e2e8f0;
+      border: 1px solid #3f4259;
+      padding: 6px 12px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
     }
 
     button:hover {
-      background-color: #3f4263;
-      border-color: #6c71a3;
+      background-color: #3b3e57;
+      border-color: #5d6287;
     }
 
     button:active {
@@ -71,31 +71,97 @@
       color: #ffffff !important;
     }
 
-    .btn-export {
-      background-color: #3b82f6;
-      border-color: #2563eb;
+    .btn-pipe-type {
+      background-color: #181822;
+      font-size: 11px;
     }
 
-    .btn-export:hover {
+    .btn-pipe-type.selected {
+      border-color: #38bdf8;
+      background-color: #0284c7;
+      color: #ffffff;
+    }
+
+    .btn-export {
       background-color: #2563eb;
+      border-color: #1d4ed8;
+      color: #ffffff;
+    }
+    .btn-export:hover {
+      background-color: #1d4ed8;
     }
 
     .btn-danger {
-      background-color: #ef4444;
-      border-color: #dc2626;
+      background-color: #dc2626;
+      border-color: #b91c1c;
+      color: #ffffff;
     }
 
-    .btn-danger:hover {
-      background-color: #dc2626;
+    #main-layout {
+      flex: 1;
+      display: flex;
+      height: calc(100vh - 52px);
+      overflow: hidden;
+    }
+
+    #sidebar {
+      width: 280px;
+      background-color: #161620;
+      border-right: 2px solid #2e2e40;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .category-box {
+      border: 1px solid #272738;
+      border-radius: 6px;
+      background-color: #1b1b26;
+      padding: 8px;
+    }
+
+    .category-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      font-weight: bold;
+      border-bottom: 1px solid #2e2e40;
+      padding-bottom: 4px;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .item-btn {
+      background-color: #222333;
+      border: 1px solid #33354d;
+      color: #cbd5e1;
+      padding: 7px 4px;
+      border-radius: 4px;
+      font-size: 11px;
+      text-align: center;
+      cursor: pointer;
+      line-height: 1.2;
+    }
+
+    .item-btn:hover {
+      background-color: #3b82f6;
+      border-color: #60a5fa;
+      color: #ffffff;
     }
 
     #canvas-container {
       flex: 1;
-      width: 100%;
-      height: calc(100vh - 60px);
       position: relative;
-      background-color: #181820;
-      background-image: radial-gradient(#33334d 1.5px, transparent 1.5px);
+      background-color: #121217;
+      background-image: radial-gradient(#2b2b3d 1.5px, transparent 1.5px);
       background-size: 24px 24px;
       overflow: hidden;
     }
@@ -113,21 +179,24 @@
 
     .symbol-group:hover rect,
     .symbol-group:hover circle,
-    .symbol-group:hover path {
+    .symbol-group:hover path,
+    .symbol-group:hover polygon {
       stroke: #38bdf8 !important;
     }
   </style>
 </head>
 <body>
 
+  <!-- BARRA SUPERIOR -->
   <header>
     <div class="toolbar-group">
-      <button onclick="addSymbol('tank')">+ Estanque</button>
-      <button onclick="addSymbol('pump')">+ Bomba</button>
-      <button onclick="addSymbol('valve')">+ Válvula</button>
-      <button onclick="addSymbol('instrument')">+ Instrumento ISA</button>
-      <button id="pipe-btn" onclick="togglePipeMode()">Trazar Tubería</button>
-      <button class="btn-danger" onclick="clearCanvas()">Limpiar</button>
+      <button id="pipe-btn" onclick="togglePipeMode()">Trazar Línea / Tubería</button>
+      <span style="font-size: 11px; color:#94a3b8; margin-left: 4px;">Tipo de Señal:</span>
+      <button id="pipe-process" class="btn-pipe-type selected" onclick="setPipeStyle('process')">Tubería Proceso</button>
+      <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Señal Eléctrica (---)</button>
+      <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Señal Neumática (//)</button>
+      <button id="pipe-data" class="btn-pipe-type" onclick="setPipeStyle('data')">Bus de Datos (-o-)</button>
+      <button class="btn-danger" onclick="clearCanvas()">Limpiar Todo</button>
     </div>
     <div class="toolbar-group">
       <button class="btn-export" onclick="exportSVG()">Exportar SVG</button>
@@ -135,16 +204,100 @@
     </div>
   </header>
 
-  <div id="canvas-container">
-    <svg id="pid-canvas" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
-        </marker>
-      </defs>
-      <g id="pipes-layer"></g>
-      <g id="symbols-layer"></g>
-    </svg>
+  <!-- CUERPO PRINCIPAL -->
+  <div id="main-layout">
+    
+    <!-- SIDEBAR: SIMBOLOGÍA ISA S5.1 -->
+    <aside id="sidebar">
+      
+      <!-- 1. EQUIPOS DE PROCESO -->
+      <div class="category-box">
+        <div class="category-title">Equipos de Proceso</div>
+        <div class="category-grid">
+          <button class="item-btn" onclick="addSymbol('tank_vertical')">Estanque Vertical</button>
+          <button class="item-btn" onclick="addSymbol('tank_horizontal')">Estanque Horizontal</button>
+          <button class="item-btn" onclick="addSymbol('tank_jacket')">Tanque Enchaquetado</button>
+          <button class="item-btn" onclick="addSymbol('heat_exchanger')">Intercambiador Calor</button>
+          <button class="item-btn" onclick="addSymbol('dest_tower')">Torre Destilación</button>
+          <button class="item-btn" onclick="addSymbol('furnace')">Horno / Caldera</button>
+          <button class="item-btn" onclick="addSymbol('cyclone')">Ciclón Separador</button>
+          <button class="item-btn" onclick="addSymbol('silo')">Tolva / Silo</button>
+        </div>
+      </div>
+
+      <!-- 2. MAQUINARIA Y ACCIONAMIENTOS -->
+      <div class="category-box">
+        <div class="category-title">Bombas y Motores</div>
+        <div class="category-grid">
+          <button class="item-btn" onclick="addSymbol('pump_centrifugal')">Bomba Centrífuga</button>
+          <button class="item-btn" onclick="addSymbol('pump_positive')">Desplaz. Positivo</button>
+          <button class="item-btn" onclick="addSymbol('compressor')">Compresor</button>
+          <button class="item-btn" onclick="addSymbol('motor_electric')">Motor Eléctrico</button>
+          <button class="item-btn" onclick="addSymbol('agitator')">Agitador / Mezclador</button>
+          <button class="item-btn" onclick="addSymbol('conveyor')">Banda Transportadora</button>
+        </div>
+      </div>
+
+      <!-- 3. ELEMENTOS PRIMARIOS (SENSORES) -->
+      <div class="category-box">
+        <div class="category-title">Sensores y Elementos Primarios</div>
+        <div class="category-grid">
+          <button class="item-btn" onclick="addSymbol('elem_orifice')">Placa Orificio (FE)</button>
+          <button class="item-btn" onclick="addSymbol('elem_venturi')">Tubo Venturi (FE)</button>
+          <button class="item-btn" onclick="addSymbol('elem_rotameter')">Rotámetro (FI)</button>
+          <button class="item-btn" onclick="addSymbol('elem_thermowell')">Termopozo / RTD (TE)</button>
+          <button class="item-btn" onclick="addSymbol('elem_gauge')">Manómetro Local (PG)</button>
+          <button class="item-btn" onclick="addSymbol('elem_level_glass')">Mirilla Nivel (LG)</button>
+          <button class="item-btn" onclick="addSymbol('elem_steam_trap')">Trampa de Vapor</button>
+          <button class="item-btn" onclick="addSymbol('elem_rupture_disc')">Disco Ruptura (PSE)</button>
+        </div>
+      </div>
+
+      <!-- 4. VÁLVULAS Y ACTUADORES -->
+      <div class="category-box">
+        <div class="category-title">Válvulas y Actuadores</div>
+        <div class="category-grid">
+          <button class="item-btn" onclick="addSymbol('valve_gate')">Válvula Manual</button>
+          <button class="item-btn" onclick="addSymbol('valve_check')">Válvula Check (Retención)</button>
+          <button class="item-btn" onclick="addSymbol('valve_control_diaph')">Válvula Diafragma</button>
+          <button class="item-btn" onclick="addSymbol('valve_solenoid')">Electroválvula (S)</button>
+          <button class="item-btn" onclick="addSymbol('valve_3way')">Válvula 3 Vías</button>
+          <button class="item-btn" onclick="addSymbol('valve_relief')">Válvula Alivio (PSV)</button>
+          <button class="item-btn" onclick="addSymbol('act_piston')">Actuador Cilindro</button>
+          <button class="item-btn" onclick="addSymbol('valve_butterfly')">Válvula Mariposa</button>
+        </div>
+      </div>
+
+      <!-- 5. INSTRUMENTOS Y RELÉS ISA -->
+      <div class="category-box">
+        <div class="category-title">Instrumentación y Relés ISA</div>
+        <div class="category-grid">
+          <button class="item-btn" onclick="addSymbol('inst_field')">Instrumento Campo</button>
+          <button class="item-btn" onclick="addSymbol('inst_panel')">Instrumento en Panel</button>
+          <button class="item-btn" onclick="addSymbol('inst_plc')">Bloque PLC / DCS</button>
+          <button class="item-btn" onclick="addSymbol('relay_sqrt')">Relé Raíz (FY √)</button>
+          <button class="item-btn" onclick="addSymbol('relay_sum')">Relé Sumador (FY Σ)</button>
+          <button class="item-btn" onclick="addSymbol('relay_ip')">Convertidor (FY I/P)</button>
+          <button class="item-btn" onclick="addSymbol('relay_mult')">Relé Razón (FY A/B)</button>
+          <button class="item-btn" onclick="addSymbol('inst_switch')">Switch Alarma (LSH/L)</button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- LIENZO SVG -->
+    <main id="canvas-container">
+      <svg id="pid-canvas" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+          </marker>
+        </defs>
+        <g id="pipes-layer"></g>
+        <g id="symbols-layer"></g>
+      </svg>
+    </main>
+
   </div>
 
   <script>
@@ -155,6 +308,7 @@
 
     const SVG_NS = "http://www.w3.org/2000/svg";
     let isPipeMode = false;
+    let pipeType = 'process';
     let activePipe = null;
     let selectedElement = null;
     let offset = { x: 0, y: 0 };
@@ -163,13 +317,10 @@
       const rect = canvas.getBoundingClientRect();
       const cx = evt.touches ? evt.touches[0].clientX : evt.clientX;
       const cy = evt.touches ? evt.touches[0].clientY : evt.clientY;
-      return {
-        x: cx - rect.left,
-        y: cy - rect.top
-      };
+      return { x: cx - rect.left, y: cy - rect.top };
     }
 
-    function createSVGText(text, x, y, fill = "#ffffff", size = "12px", weight = "normal") {
+    function createSVGText(text, x, y, fill = "#ffffff", size = "11px", weight = "normal") {
       const el = document.createElementNS(SVG_NS, 'text');
       el.setAttribute('x', x);
       el.setAttribute('y', y);
@@ -177,6 +328,7 @@
       el.setAttribute('font-size', size);
       el.setAttribute('font-weight', weight);
       el.setAttribute('text-anchor', 'middle');
+      el.setAttribute('dominant-baseline', 'central');
       el.setAttribute('font-family', 'sans-serif');
       el.textContent = text;
       return el;
@@ -184,101 +336,407 @@
 
     function addSymbol(type) {
       const rect = canvas.getBoundingClientRect();
-      const posX = rect.width ? rect.width / 2 : 250;
-      const posY = rect.height ? rect.height / 2 : 250;
+      const posX = rect.width ? rect.width / 2 : 320;
+      const posY = rect.height ? rect.height / 2 : 260;
 
       const group = document.createElementNS(SVG_NS, 'g');
       group.setAttribute('class', 'symbol-group');
       group.setAttribute('transform', `translate(${posX}, ${posY})`);
 
-      if (type === 'tank') {
+      // 1. EQUIPOS DE PROCESO
+      if (type === 'tank_vertical') {
         const body = document.createElementNS(SVG_NS, 'rect');
-        body.setAttribute('x', '-35');
-        body.setAttribute('y', '-55');
-        body.setAttribute('width', '70');
-        body.setAttribute('height', '110');
-        body.setAttribute('rx', '14');
-        body.setAttribute('fill', '#262938');
-        body.setAttribute('stroke', '#ffffff');
-        body.setAttribute('stroke-width', '2.5');
-
-        const tag = createSVGText('TK-101', 0, 5, '#ffffff', '12px', 'bold');
+        body.setAttribute('x', '-40'); body.setAttribute('y', '-60');
+        body.setAttribute('width', '80'); body.setAttribute('height', '120');
+        body.setAttribute('rx', '15'); body.setAttribute('fill', '#202230');
+        body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2.5');
         group.appendChild(body);
-        group.appendChild(tag);
-      } 
-      else if (type === 'pump') {
-        const circle = document.createElementNS(SVG_NS, 'circle');
-        circle.setAttribute('cx', '0');
-        circle.setAttribute('cy', '0');
-        circle.setAttribute('r', '26');
-        circle.setAttribute('fill', '#262938');
-        circle.setAttribute('stroke', '#ffffff');
-        circle.setAttribute('stroke-width', '2.5');
+        group.appendChild(createSVGText('TK-101', 0, 0, '#ffffff', '12px', 'bold'));
+      }
+      else if (type === 'tank_horizontal') {
+        const body = document.createElementNS(SVG_NS, 'rect');
+        body.setAttribute('x', '-65'); body.setAttribute('y', '-35');
+        body.setAttribute('width', '130'); body.setAttribute('height', '70');
+        body.setAttribute('rx', '18'); body.setAttribute('fill', '#202230');
+        body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2.5');
+        group.appendChild(body);
+        group.appendChild(createSVGText('TK-102', 0, 0, '#ffffff', '12px', 'bold'));
+      }
+      else if (type === 'tank_jacket') {
+        const outer = document.createElementNS(SVG_NS, 'rect');
+        outer.setAttribute('x', '-48'); outer.setAttribute('y', '-40');
+        outer.setAttribute('width', '96'); outer.setAttribute('height', '90');
+        outer.setAttribute('rx', '12'); outer.setAttribute('fill', '#2d3148');
+        outer.setAttribute('stroke', '#38bdf8'); outer.setAttribute('stroke-width', '2');
+        const inner = document.createElementNS(SVG_NS, 'rect');
+        inner.setAttribute('x', '-38'); inner.setAttribute('y', '-55');
+        inner.setAttribute('width', '76'); inner.setAttribute('height', '110');
+        inner.setAttribute('rx', '10'); inner.setAttribute('fill', '#202230');
+        inner.setAttribute('stroke', '#ffffff'); inner.setAttribute('stroke-width', '2.5');
+        group.appendChild(outer); group.appendChild(inner);
+        group.appendChild(createSVGText('REACTOR', 0, 0, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'heat_exchanger') {
+        const body = document.createElementNS(SVG_NS, 'rect');
+        body.setAttribute('x', '-50'); body.setAttribute('y', '-25');
+        body.setAttribute('width', '100'); body.setAttribute('height', '50');
+        body.setAttribute('rx', '12'); body.setAttribute('fill', '#202230');
+        body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2.5');
+        const wave = document.createElementNS(SVG_NS, 'path');
+        wave.setAttribute('d', 'M -40 0 C -20 -20, -20 20, 0 0 C 20 -20, 20 20, 40 0');
+        wave.setAttribute('fill', 'none'); wave.setAttribute('stroke', '#38bdf8'); wave.setAttribute('stroke-width', '2.5');
+        group.appendChild(body); group.appendChild(wave);
+        group.appendChild(createSVGText('E-101', 0, 38, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'dest_tower') {
+        const col = document.createElementNS(SVG_NS, 'rect');
+        col.setAttribute('x', '-25'); col.setAttribute('y', '-75');
+        col.setAttribute('width', '50'); col.setAttribute('height', '150');
+        col.setAttribute('rx', '14'); col.setAttribute('fill', '#202230');
+        col.setAttribute('stroke', '#ffffff'); col.setAttribute('stroke-width', '2.5');
+        group.appendChild(col);
+        for(let i = -45; i <= 45; i += 30) {
+          const tray = document.createElementNS(SVG_NS, 'line');
+          tray.setAttribute('x1', '-20'); tray.setAttribute('y1', i);
+          tray.setAttribute('x2', '20'); tray.setAttribute('y2', i);
+          tray.setAttribute('stroke', '#94a3b8'); tray.setAttribute('stroke-width', '2');
+          group.appendChild(tray);
+        }
+        group.appendChild(createSVGText('T-101', 0, 0, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'furnace') {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', 'M -35 50 L -35 10 L -15 -20 L -15 -60 L 15 -60 L 15 -20 L 35 10 L 35 50 Z');
+        path.setAttribute('fill', '#202230'); path.setAttribute('stroke', '#ffffff'); path.setAttribute('stroke-width', '2.5');
+        group.appendChild(path);
+        group.appendChild(createSVGText('HORNO', 0, 20, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'cyclone') {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', 'M -30 -40 L 30 -40 L 30 0 L 0 45 L -30 0 Z');
+        path.setAttribute('fill', '#202230'); path.setAttribute('stroke', '#ffffff'); path.setAttribute('stroke-width', '2.5');
+        group.appendChild(path);
+        group.appendChild(createSVGText('S-101', 0, -10, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'silo') {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', 'M -35 -40 L 35 -40 L 35 15 L 12 50 L -12 50 L -35 15 Z');
+        path.setAttribute('fill', '#202230'); path.setAttribute('stroke', '#ffffff'); path.setAttribute('stroke-width', '2.5');
+        group.appendChild(path);
+        group.appendChild(createSVGText('SILO', 0, -5, '#ffffff', '11px', 'bold'));
+      }
 
+      // 2. BOMBAS Y ACCIONAMIENTOS
+      else if (type === 'pump_centrifugal') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '25');
+        circle.setAttribute('fill', '#202230'); circle.setAttribute('stroke', '#ffffff'); circle.setAttribute('stroke-width', '2.5');
         const imp = document.createElementNS(SVG_NS, 'path');
-        imp.setAttribute('d', 'M 0 -26 L 26 15 L -26 15 Z');
-        imp.setAttribute('fill', '#3f4263');
-        imp.setAttribute('stroke', '#ffffff');
-        imp.setAttribute('stroke-width', '2');
-
-        const tag = createSVGText('P-101', 0, 44, '#ffffff', '12px', 'bold');
-        group.appendChild(circle);
-        group.appendChild(imp);
-        group.appendChild(tag);
-      } 
-      else if (type === 'valve') {
-        const valveBody = document.createElementNS(SVG_NS, 'path');
-        valveBody.setAttribute('d', 'M -25 -14 L 0 0 L -25 14 Z M 25 -14 L 0 0 L 25 14 Z');
-        valveBody.setAttribute('fill', '#3f4263');
-        valveBody.setAttribute('stroke', '#ffffff');
-        valveBody.setAttribute('stroke-width', '2.5');
-
-        const stem = document.createElementNS(SVG_NS, 'line');
-        stem.setAttribute('x1', '0');
-        stem.setAttribute('y1', '0');
-        stem.setAttribute('x2', '0');
-        stem.setAttribute('y2', '-18');
-        stem.setAttribute('stroke', '#ffffff');
-        stem.setAttribute('stroke-width', '2.5');
-
-        const handle = document.createElementNS(SVG_NS, 'line');
-        handle.setAttribute('x1', '-10');
-        handle.setAttribute('y1', '-18');
-        handle.setAttribute('x2', '10');
-        handle.setAttribute('y2', '-18');
-        handle.setAttribute('stroke', '#ffffff');
-        handle.setAttribute('stroke-width', '2.5');
-
-        const tag = createSVGText('V-101', 0, 32, '#ffffff', '11px', 'bold');
-        group.appendChild(valveBody);
-        group.appendChild(stem);
-        group.appendChild(handle);
-        group.appendChild(tag);
-      } 
-      else if (type === 'instrument') {
+        imp.setAttribute('d', 'M 0 -25 L 25 15 L -25 15 Z');
+        imp.setAttribute('fill', '#384260'); imp.setAttribute('stroke', '#ffffff'); imp.setAttribute('stroke-width', '2');
+        group.appendChild(circle); group.appendChild(imp);
+        group.appendChild(createSVGText('P-101', 0, 40, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'pump_positive') {
         const circle = document.createElementNS(SVG_NS, 'circle');
-        circle.setAttribute('cx', '0');
-        circle.setAttribute('cy', '0');
-        circle.setAttribute('r', '24');
-        circle.setAttribute('fill', '#1f1f2e');
-        circle.setAttribute('stroke', '#38bdf8');
-        circle.setAttribute('stroke-width', '2.5');
-
-        const line = document.createElementNS(SVG_NS, 'line');
-        line.setAttribute('x1', '-24');
-        line.setAttribute('y1', '0');
-        line.setAttribute('x2', '24');
-        line.setAttribute('y2', '0');
-        line.setAttribute('stroke', '#38bdf8');
-        line.setAttribute('stroke-width', '1.5');
-
-        const varText = createSVGText('LT', 0, -6, '#38bdf8', '12px', 'bold');
-        const numText = createSVGText('101', 0, 15, '#ffffff', '11px', 'bold');
-
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '25');
+        circle.setAttribute('fill', '#202230'); circle.setAttribute('stroke', '#ffffff'); circle.setAttribute('stroke-width', '2.5');
+        const d1 = document.createElementNS(SVG_NS, 'polygon');
+        d1.setAttribute('points', '0,-20 20,0 0,20 -20,0');
+        d1.setAttribute('fill', '#384260'); d1.setAttribute('stroke', '#ffffff'); d1.setAttribute('stroke-width', '2');
+        group.appendChild(circle); group.appendChild(d1);
+        group.appendChild(createSVGText('P-DP', 0, 40, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'compressor') {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', 'M -25 -25 L 25 -10 L 25 10 L -25 25 Z');
+        path.setAttribute('fill', '#202230'); path.setAttribute('stroke', '#ffffff'); path.setAttribute('stroke-width', '2.5');
+        group.appendChild(path);
+        group.appendChild(createSVGText('C-101', 0, 38, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'motor_electric') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
+        circle.setAttribute('fill', '#1e293b'); circle.setAttribute('stroke', '#f59e0b'); circle.setAttribute('stroke-width', '2.5');
         group.appendChild(circle);
-        group.appendChild(line);
-        group.appendChild(varText);
-        group.appendChild(numText);
+        group.appendChild(createSVGText('M', 0, 0, '#f59e0b', '16px', 'bold'));
+        group.appendChild(createSVGText('M-101', 0, 34, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'agitator') {
+        const motor = document.createElementNS(SVG_NS, 'rect');
+        motor.setAttribute('x', '-12'); motor.setAttribute('y', '-35');
+        motor.setAttribute('width', '24'); motor.setAttribute('height', '18');
+        motor.setAttribute('fill', '#1e293b'); motor.setAttribute('stroke', '#ffffff'); motor.setAttribute('stroke-width', '2');
+        const shaft = document.createElementNS(SVG_NS, 'line');
+        shaft.setAttribute('x1', '0'); shaft.setAttribute('y1', '-17');
+        shaft.setAttribute('x2', '0'); shaft.setAttribute('y2', '25');
+        shaft.setAttribute('stroke', '#ffffff'); shaft.setAttribute('stroke-width', '2.5');
+        const blade = document.createElementNS(SVG_NS, 'path');
+        blade.setAttribute('d', 'M -18 20 L 0 25 L -18 30 Z M 18 20 L 0 25 L 18 30 Z');
+        blade.setAttribute('fill', '#38bdf8'); blade.setAttribute('stroke', '#ffffff'); blade.setAttribute('stroke-width', '1.5');
+        group.appendChild(motor); group.appendChild(shaft); group.appendChild(blade);
+      }
+      else if (type === 'conveyor') {
+        const belt = document.createElementNS(SVG_NS, 'rect');
+        belt.setAttribute('x', '-45'); belt.setAttribute('y', '-8');
+        belt.setAttribute('width', '90'); belt.setAttribute('height', '16');
+        belt.setAttribute('rx', '8'); belt.setAttribute('fill', '#202230');
+        belt.setAttribute('stroke', '#ffffff'); belt.setAttribute('stroke-width', '2.5');
+        const c1 = document.createElementNS(SVG_NS, 'circle');
+        c1.setAttribute('cx', '-37'); c1.setAttribute('cy', '0'); c1.setAttribute('r', '6'); c1.setAttribute('fill', '#38bdf8');
+        const c2 = document.createElementNS(SVG_NS, 'circle');
+        c2.setAttribute('cx', '37'); c2.setAttribute('cy', '0'); c2.setAttribute('r', '6'); c2.setAttribute('fill', '#38bdf8');
+        group.appendChild(belt); group.appendChild(c1); group.appendChild(c2);
+      }
+
+      // 3. SENSORES Y ELEMENTOS PRIMARIOS
+      else if (type === 'elem_orifice') {
+        const l1 = document.createElementNS(SVG_NS, 'line');
+        l1.setAttribute('x1', '-6'); l1.setAttribute('y1', '-18'); l1.setAttribute('x2', '-6'); l1.setAttribute('y2', '18');
+        l1.setAttribute('stroke', '#ffffff'); l1.setAttribute('stroke-width', '3');
+        const l2 = document.createElementNS(SVG_NS, 'line');
+        l2.setAttribute('x1', '6'); l2.setAttribute('y1', '-18'); l2.setAttribute('x2', '6'); l2.setAttribute('y2', '18');
+        l2.setAttribute('stroke', '#ffffff'); l2.setAttribute('stroke-width', '3');
+        group.appendChild(l1); group.appendChild(l2);
+        group.appendChild(createSVGText('FE-101', 0, 26, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'elem_venturi') {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', 'M -25 -14 L -8 -6 L 8 -6 L 25 -14 L 25 14 L 8 6 L -8 6 L -25 14 Z');
+        path.setAttribute('fill', '#202230'); path.setAttribute('stroke', '#ffffff'); path.setAttribute('stroke-width', '2');
+        group.appendChild(path);
+        group.appendChild(createSVGText('VENTURI', 0, 24, '#ffffff', '9px', 'bold'));
+      }
+      else if (type === 'elem_rotameter') {
+        const body = document.createElementNS(SVG_NS, 'path');
+        body.setAttribute('d', 'M -14 -22 L 14 -22 L 8 22 L -8 22 Z');
+        body.setAttribute('fill', '#202230'); body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2.2');
+        const float = document.createElementNS(SVG_NS, 'circle');
+        float.setAttribute('cx', '0'); float.setAttribute('cy', '0'); float.setAttribute('r', '4'); float.setAttribute('fill', '#38bdf8');
+        group.appendChild(body); group.appendChild(float);
+        group.appendChild(createSVGText('FI-101', 0, 32, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'elem_thermowell') {
+        const base = document.createElementNS(SVG_NS, 'line');
+        base.setAttribute('x1', '-15'); base.setAttribute('y1', '10'); base.setAttribute('x2', '15'); base.setAttribute('y2', '10');
+        base.setAttribute('stroke', '#ffffff'); base.setAttribute('stroke-width', '2');
+        const stem = document.createElementNS(SVG_NS, 'line');
+        stem.setAttribute('x1', '0'); stem.setAttribute('y1', '-18'); stem.setAttribute('x2', '0'); stem.setAttribute('y2', '10');
+        stem.setAttribute('stroke', '#f87171'); stem.setAttribute('stroke-width', '2.5');
+        const tip = document.createElementNS(SVG_NS, 'circle');
+        tip.setAttribute('cx', '0'); tip.setAttribute('cy', '-18'); tip.setAttribute('r', '4'); tip.setAttribute('fill', '#f87171');
+        group.appendChild(base); group.appendChild(stem); group.appendChild(tip);
+        group.appendChild(createSVGText('TW / TE', 0, -28, '#f87171', '10px', 'bold'));
+      }
+      else if (type === 'elem_gauge') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '-14'); circle.setAttribute('r', '16');
+        circle.setAttribute('fill', '#161620'); circle.setAttribute('stroke', '#34d399'); circle.setAttribute('stroke-width', '2');
+        const stem = document.createElementNS(SVG_NS, 'line');
+        stem.setAttribute('x1', '0'); stem.setAttribute('y1', '2'); stem.setAttribute('x2', '0'); stem.setAttribute('y2', '16');
+        stem.setAttribute('stroke', '#ffffff'); stem.setAttribute('stroke-width', '2');
+        group.appendChild(circle); group.appendChild(stem);
+        group.appendChild(createSVGText('PG', 0, -14, '#34d399', '11px', 'bold'));
+      }
+      else if (type === 'elem_level_glass') {
+        const body = document.createElementNS(SVG_NS, 'rect');
+        body.setAttribute('x', '-8'); body.setAttribute('y', '-30');
+        body.setAttribute('width', '16'); body.setAttribute('height', '60');
+        body.setAttribute('fill', '#1e293b'); body.setAttribute('stroke', '#38bdf8'); body.setAttribute('stroke-width', '2');
+        const cTop = document.createElementNS(SVG_NS, 'line');
+        cTop.setAttribute('x1', '-8'); cTop.setAttribute('y1', '-20'); cTop.setAttribute('x2', '-20'); cTop.setAttribute('y2', '-20');
+        cTop.setAttribute('stroke', '#ffffff'); cTop.setAttribute('stroke-width', '2');
+        const cBot = document.createElementNS(SVG_NS, 'line');
+        cBot.setAttribute('x1', '-8'); cBot.setAttribute('y1', '20'); cBot.setAttribute('x2', '-20'); cBot.setAttribute('y2', '20');
+        cBot.setAttribute('stroke', '#ffffff'); cBot.setAttribute('stroke-width', '2');
+        group.appendChild(body); group.appendChild(cTop); group.appendChild(cBot);
+        group.appendChild(createSVGText('LG', 18, 0, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'elem_steam_trap') {
+        const box = document.createElementNS(SVG_NS, 'rect');
+        box.setAttribute('x', '-16'); box.setAttribute('y', '-16');
+        box.setAttribute('width', '32'); box.setAttribute('height', '32');
+        box.setAttribute('fill', '#202230'); box.setAttribute('stroke', '#ffffff'); box.setAttribute('stroke-width', '2');
+        const line = document.createElementNS(SVG_NS, 'line');
+        line.setAttribute('x1', '-22'); line.setAttribute('y1', '0'); line.setAttribute('x2', '22'); line.setAttribute('y2', '0');
+        line.setAttribute('stroke', '#ffffff'); line.setAttribute('stroke-width', '2');
+        group.appendChild(line); group.appendChild(box);
+        group.appendChild(createSVGText('T', 0, 0, '#ffffff', '13px', 'bold'));
+      }
+      else if (type === 'elem_rupture_disc') {
+        const base = document.createElementNS(SVG_NS, 'line');
+        base.setAttribute('x1', '-16'); base.setAttribute('y1', '14'); base.setAttribute('x2', '16'); base.setAttribute('y2', '14');
+        base.setAttribute('stroke', '#ffffff'); base.setAttribute('stroke-width', '2.5');
+        const stem = document.createElementNS(SVG_NS, 'line');
+        stem.setAttribute('x1', '0'); stem.setAttribute('y1', '-12'); stem.setAttribute('x2', '0'); stem.setAttribute('y2', '14');
+        stem.setAttribute('stroke', '#ffffff'); stem.setAttribute('stroke-width', '2');
+        const tri = document.createElementNS(SVG_NS, 'polygon');
+        tri.setAttribute('points', '0,-12 -12,0 12,0');
+        tri.setAttribute('fill', '#ef4444'); tri.setAttribute('stroke', '#ffffff'); tri.setAttribute('stroke-width', '1.5');
+        group.appendChild(base); group.appendChild(stem); group.appendChild(tri);
+        group.appendChild(createSVGText('PSE', 0, -22, '#ef4444', '10px', 'bold'));
+      }
+
+      // 4. VÁLVULAS Y ACTUADORES
+      else if (type === 'valve_gate') {
+        const body = document.createElementNS(SVG_NS, 'path');
+        body.setAttribute('d', 'M -22 -12 L 0 0 L -22 12 Z M 22 -12 L 0 0 L 22 12 Z');
+        body.setAttribute('fill', '#384260'); body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2.2');
+        const stem = document.createElementNS(SVG_NS, 'line');
+        stem.setAttribute('x1', '0'); stem.setAttribute('y1', '0'); stem.setAttribute('x2', '0'); stem.setAttribute('y2', '-16');
+        stem.setAttribute('stroke', '#ffffff'); stem.setAttribute('stroke-width', '2.2');
+        const handle = document.createElementNS(SVG_NS, 'line');
+        handle.setAttribute('x1', '-8'); handle.setAttribute('y1', '-16'); handle.setAttribute('x2', '8'); handle.setAttribute('y2', '-16');
+        handle.setAttribute('stroke', '#ffffff'); handle.setAttribute('stroke-width', '2.2');
+        group.appendChild(body); group.appendChild(stem); group.appendChild(handle);
+        group.appendChild(createSVGText('HV-101', 0, 26, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'valve_check') {
+        const body = document.createElementNS(SVG_NS, 'path');
+        body.setAttribute('d', 'M -22 -12 L 0 0 L -22 12 Z M 22 -12 L 0 0 L 22 12 Z');
+        body.setAttribute('fill', '#384260'); body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2.2');
+        const dot = document.createElementNS(SVG_NS, 'circle');
+        dot.setAttribute('cx', '-6'); dot.setAttribute('cy', '0'); dot.setAttribute('r', '4'); dot.setAttribute('fill', '#38bdf8');
+        group.appendChild(body); group.appendChild(dot);
+        group.appendChild(createSVGText('NRV-01', 0, 26, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'valve_control_diaph') {
+        const body = document.createElementNS(SVG_NS, 'path');
+        body.setAttribute('d', 'M -22 -10 L 0 0 L -22 10 Z M 22 -10 L 0 0 L 22 10 Z');
+        body.setAttribute('fill', '#384260'); body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2.2');
+        const stem = document.createElementNS(SVG_NS, 'line');
+        stem.setAttribute('x1', '0'); stem.setAttribute('y1', '0'); stem.setAttribute('x2', '0'); stem.setAttribute('y2', '-16');
+        stem.setAttribute('stroke', '#ffffff'); stem.setAttribute('stroke-width', '2');
+        const act = document.createElementNS(SVG_NS, 'path');
+        act.setAttribute('d', 'M -16 -24 A 16 16 0 0 1 16 -24 Z');
+        act.setAttribute('fill', '#202230'); act.setAttribute('stroke', '#38bdf8'); act.setAttribute('stroke-width', '2');
+        group.appendChild(body); group.appendChild(stem); group.appendChild(act);
+        group.appendChild(createSVGText('FCV-101', 0, 24, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'valve_solenoid') {
+        const body = document.createElementNS(SVG_NS, 'path');
+        body.setAttribute('d', 'M -22 -10 L 0 0 L -22 10 Z M 22 -10 L 0 0 L 22 10 Z');
+        body.setAttribute('fill', '#384260'); body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2.2');
+        const sol = document.createElementNS(SVG_NS, 'rect');
+        sol.setAttribute('x', '-10'); sol.setAttribute('y', '-25'); sol.setAttribute('width', '20'); sol.setAttribute('height', '15');
+        sol.setAttribute('fill', '#1e293b'); sol.setAttribute('stroke', '#ffffff'); sol.setAttribute('stroke-width', '1.5');
+        group.appendChild(body); group.appendChild(sol);
+        group.appendChild(createSVGText('S', 0, -17, '#ffffff', '10px', 'bold'));
+        group.appendChild(createSVGText('EV-101', 0, 24, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'valve_3way') {
+        const body = document.createElementNS(SVG_NS, 'path');
+        body.setAttribute('d', 'M -18 -10 L 0 0 L -18 10 Z M 18 -10 L 0 0 L 18 10 Z M -10 18 L 0 0 L 10 18 Z');
+        body.setAttribute('fill', '#384260'); body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2');
+        group.appendChild(body);
+        group.appendChild(createSVGText('XV-3W', 0, -18, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'valve_relief') {
+        const body = document.createElementNS(SVG_NS, 'path');
+        body.setAttribute('d', 'M -18 0 L 0 0 L 0 18 Z M -18 0 L -18 18 L 0 18 Z');
+        body.setAttribute('fill', '#384260'); body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2');
+        group.appendChild(body);
+        group.appendChild(createSVGText('PSV-01', 0, 32, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'act_piston') {
+        const pBody = document.createElementNS(SVG_NS, 'rect');
+        pBody.setAttribute('x', '-12'); pBody.setAttribute('y', '-34');
+        pBody.setAttribute('width', '24'); pBody.setAttribute('height', '24');
+        pBody.setAttribute('fill', '#202230'); pBody.setAttribute('stroke', '#38bdf8'); pBody.setAttribute('stroke-width', '2');
+        const pShaft = document.createElementNS(SVG_NS, 'line');
+        pShaft.setAttribute('x1', '0'); pShaft.setAttribute('y1', '-10'); pShaft.setAttribute('x2', '0'); pShaft.setAttribute('y2', '0');
+        pShaft.setAttribute('stroke', '#ffffff'); pShaft.setAttribute('stroke-width', '2.5');
+        const vBody = document.createElementNS(SVG_NS, 'path');
+        vBody.setAttribute('d', 'M -20 -10 L 0 0 L -20 10 Z M 20 -10 L 0 0 L 20 10 Z');
+        vBody.setAttribute('fill', '#384260'); vBody.setAttribute('stroke', '#ffffff'); vBody.setAttribute('stroke-width', '2');
+        group.appendChild(pBody); group.appendChild(pShaft); group.appendChild(vBody);
+        group.appendChild(createSVGText('PV-101', 0, 24, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'valve_butterfly') {
+        const line = document.createElementNS(SVG_NS, 'line');
+        line.setAttribute('x1', '-20'); line.setAttribute('y1', '0'); line.setAttribute('x2', '20'); line.setAttribute('y2', '0');
+        line.setAttribute('stroke', '#ffffff'); line.setAttribute('stroke-width', '2.5');
+        const flap = document.createElementNS(SVG_NS, 'line');
+        flap.setAttribute('x1', '-10'); flap.setAttribute('y1', '-14'); flap.setAttribute('x2', '10'); flap.setAttribute('y2', '14');
+        flap.setAttribute('stroke', '#38bdf8'); flap.setAttribute('stroke-width', '3');
+        group.appendChild(line); group.appendChild(flap);
+        group.appendChild(createSVGText('BV-101', 0, 24, '#ffffff', '10px', 'bold'));
+      }
+
+      // 5. INSTRUMENTACIÓN Y RELÉS ISA
+      else if (type === 'inst_field') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
+        circle.setAttribute('fill', '#161620'); circle.setAttribute('stroke', '#ffffff'); circle.setAttribute('stroke-width', '2');
+        group.appendChild(circle);
+        group.appendChild(createSVGText('FT', 0, -6, '#38bdf8', '11px', 'bold'));
+        group.appendChild(createSVGText('101', 0, 8, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'inst_panel') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
+        circle.setAttribute('fill', '#161620'); circle.setAttribute('stroke', '#38bdf8'); circle.setAttribute('stroke-width', '2');
+        const line = document.createElementNS(SVG_NS, 'line');
+        line.setAttribute('x1', '-22'); line.setAttribute('y1', '0'); line.setAttribute('x2', '22'); line.setAttribute('y2', '0');
+        line.setAttribute('stroke', '#38bdf8'); line.setAttribute('stroke-width', '1.5');
+        group.appendChild(circle); group.appendChild(line);
+        group.appendChild(createSVGText('FIC', 0, -6, '#38bdf8', '11px', 'bold'));
+        group.appendChild(createSVGText('101', 0, 8, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'inst_plc') {
+        const rect = document.createElementNS(SVG_NS, 'rect');
+        rect.setAttribute('x', '-24'); rect.setAttribute('y', '-24'); rect.setAttribute('width', '48'); rect.setAttribute('height', '48');
+        rect.setAttribute('fill', '#161620'); rect.setAttribute('stroke', '#38bdf8'); rect.setAttribute('stroke-width', '2');
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '19');
+        circle.setAttribute('fill', 'none'); circle.setAttribute('stroke', '#38bdf8'); circle.setAttribute('stroke-width', '1.5');
+        group.appendChild(rect); group.appendChild(circle);
+        group.appendChild(createSVGText('PLC', 0, -4, '#38bdf8', '10px', 'bold'));
+        group.appendChild(createSVGText('CPU', 0, 8, '#ffffff', '9px', 'bold'));
+      }
+      else if (type === 'relay_sqrt') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
+        circle.setAttribute('fill', '#161620'); circle.setAttribute('stroke', '#fbbf24'); circle.setAttribute('stroke-width', '2');
+        const fnBadge = createSVGText('√', 16, -16, '#fbbf24', '14px', 'bold');
+        group.appendChild(circle); group.appendChild(fnBadge);
+        group.appendChild(createSVGText('FY', 0, -6, '#fbbf24', '11px', 'bold'));
+        group.appendChild(createSVGText('101A', 0, 8, '#ffffff', '9px', 'bold'));
+      }
+      else if (type === 'relay_sum') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
+        circle.setAttribute('fill', '#161620'); circle.setAttribute('stroke', '#fbbf24'); circle.setAttribute('stroke-width', '2');
+        const fnBadge = createSVGText('Σ', 16, -16, '#fbbf24', '14px', 'bold');
+        group.appendChild(circle); group.appendChild(fnBadge);
+        group.appendChild(createSVGText('FY', 0, -6, '#fbbf24', '11px', 'bold'));
+        group.appendChild(createSVGText('101B', 0, 8, '#ffffff', '9px', 'bold'));
+      }
+      else if (type === 'relay_ip') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
+        circle.setAttribute('fill', '#161620'); circle.setAttribute('stroke', '#fbbf24'); circle.setAttribute('stroke-width', '2');
+        const fnBadge = createSVGText('I/P', 18, -14, '#38bdf8', '10px', 'bold');
+        group.appendChild(circle); group.appendChild(fnBadge);
+        group.appendChild(createSVGText('LY', 0, -6, '#fbbf24', '11px', 'bold'));
+        group.appendChild(createSVGText('101', 0, 8, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'relay_mult') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
+        circle.setAttribute('fill', '#161620'); circle.setAttribute('stroke', '#fbbf24'); circle.setAttribute('stroke-width', '2');
+        const fnBadge = createSVGText('A/B', 18, -14, '#fbbf24', '10px', 'bold');
+        group.appendChild(circle); group.appendChild(fnBadge);
+        group.appendChild(createSVGText('FY', 0, -6, '#fbbf24', '11px', 'bold'));
+        group.appendChild(createSVGText('101C', 0, 8, '#ffffff', '9px', 'bold'));
+      }
+      else if (type === 'inst_switch') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
+        circle.setAttribute('fill', '#161620'); circle.setAttribute('stroke', '#a78bfa'); circle.setAttribute('stroke-width', '2');
+        group.appendChild(circle);
+        group.appendChild(createSVGText('LSH', 0, -6, '#a78bfa', '11px', 'bold'));
+        group.appendChild(createSVGText('101', 0, 8, '#ffffff', '10px', 'bold'));
       }
 
       symbolsLayer.appendChild(group);
@@ -301,12 +759,12 @@
       elem.addEventListener('mousedown', handleStart);
       elem.addEventListener('touchstart', handleStart, { passive: false });
 
-      // Doble clic para cambiar nombre/tag
+      // Doble clic para cambiar etiqueta o tag
       elem.addEventListener('dblclick', (e) => {
         e.stopPropagation();
         const texts = elem.querySelectorAll('text');
         if (texts.length > 0) {
-          const val = prompt('Editar identificador:', texts[0].textContent);
+          const val = prompt('Editar texto / tag:', texts[0].textContent);
           if (val !== null && val.trim() !== '') {
             texts[0].textContent = val.trim();
           }
@@ -339,9 +797,15 @@
     function togglePipeMode() {
       isPipeMode = !isPipeMode;
       pipeBtn.classList.toggle('active-mode', isPipeMode);
-      pipeBtn.textContent = isPipeMode ? 'Modo Tubería (Activo)' : 'Trazar Tubería';
+      pipeBtn.textContent = isPipeMode ? 'Modo Trazado (Activo)' : 'Trazar Línea / Tubería';
       canvas.style.cursor = isPipeMode ? 'cell' : 'crosshair';
       activePipe = null;
+    }
+
+    function setPipeStyle(type) {
+      pipeType = type;
+      document.querySelectorAll('.btn-pipe-type').forEach(b => b.classList.remove('selected'));
+      document.getElementById(`pipe-${type}`).classList.add('selected');
     }
 
     canvas.addEventListener('mousedown', (e) => {
@@ -353,9 +817,25 @@
         activePipe.setAttribute('y1', pos.y);
         activePipe.setAttribute('x2', pos.x);
         activePipe.setAttribute('y2', pos.y);
-        activePipe.setAttribute('stroke', '#38bdf8');
-        activePipe.setAttribute('stroke-width', '4');
-        activePipe.setAttribute('marker-end', 'url(#arrow)');
+
+        if (pipeType === 'process') {
+          activePipe.setAttribute('stroke', '#38bdf8');
+          activePipe.setAttribute('stroke-width', '3.5');
+          activePipe.setAttribute('marker-end', 'url(#arrow)');
+        } else if (pipeType === 'electric') {
+          activePipe.setAttribute('stroke', '#fbbf24');
+          activePipe.setAttribute('stroke-width', '2');
+          activePipe.setAttribute('stroke-dasharray', '6,4');
+        } else if (pipeType === 'pneumatic') {
+          activePipe.setAttribute('stroke', '#f87171');
+          activePipe.setAttribute('stroke-width', '2');
+          activePipe.setAttribute('stroke-dasharray', '14,4,2,4');
+        } else if (pipeType === 'data') {
+          activePipe.setAttribute('stroke', '#a78bfa');
+          activePipe.setAttribute('stroke-width', '2');
+          activePipe.setAttribute('stroke-dasharray', '8,6');
+        }
+
         pipesLayer.appendChild(activePipe);
       } else {
         activePipe = null;
@@ -377,7 +857,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'diagrama-pid.svg';
+      a.download = 'diagrama-isa-pid.svg';
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -391,15 +871,15 @@
 
       img.onload = () => {
         const outCanvas = document.createElement('canvas');
-        outCanvas.width = canvas.clientWidth || 1200;
-        outCanvas.height = canvas.clientHeight || 800;
+        outCanvas.width = canvas.clientWidth || 1400;
+        outCanvas.height = canvas.clientHeight || 900;
         const ctx = outCanvas.getContext('2d');
-        ctx.fillStyle = '#181820';
+        ctx.fillStyle = '#121217';
         ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
         ctx.drawImage(img, 0, 0);
 
         const a = document.createElement('a');
-        a.download = 'diagrama-pid.png';
+        a.download = 'diagrama-isa-pid.png';
         a.href = outCanvas.toDataURL('image/png');
         a.click();
         URL.revokeObjectURL(url);
