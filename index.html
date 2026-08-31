@@ -27,7 +27,7 @@
 
     header {
       background-color: #1a1a24;
-      padding: 8px 16px;
+      padding: 8px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -39,7 +39,7 @@
 
     .toolbar-group {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
       flex-wrap: wrap;
     }
@@ -48,10 +48,10 @@
       background-color: #282a3a;
       color: #e2e8f0;
       border: 1px solid #3f4259;
-      padding: 6px 12px;
-      border-radius: 6px;
+      padding: 5px 10px;
+      border-radius: 5px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       transition: all 0.2s;
     }
@@ -96,18 +96,11 @@
       border-color: #1d4ed8;
       color: #ffffff;
     }
-    .btn-export:hover {
-      background-color: #1d4ed8;
-    }
 
     .btn-danger {
       background-color: #7f1d1d;
       border-color: #991b1b;
       color: #fca5a5;
-    }
-    .btn-danger:hover {
-      background-color: #991b1b;
-      color: #ffffff;
     }
 
     #main-layout {
@@ -125,7 +118,7 @@
       padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .category-box {
@@ -194,7 +187,6 @@
       cursor: pointer;
     }
 
-    /* Resaltado de selección */
     .symbol-group.is-selected {
       outline: 2px dashed #facc15 !important;
       outline-offset: 4px;
@@ -208,18 +200,23 @@
 </head>
 <body>
 
-  <!-- BARRA SUPERIOR -->
+  <!-- BARRA SUPERIOR CON TODAS LAS SEÑALES ISA S5.1 -->
   <header>
     <div class="toolbar-group">
-      <button id="pipe-btn" onclick="togglePipeMode()">Trazar Línea / Tubería</button>
-      <span style="font-size: 11px; color:#94a3b8; margin-left: 4px;">Tipo de Señal:</span>
-      <button id="pipe-process" class="btn-pipe-type selected" onclick="setPipeStyle('process')">Tubería Proceso</button>
-      <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Señal Eléctrica (---)</button>
-      <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Señal Neumática (//)</button>
-      <button id="pipe-data" class="btn-pipe-type" onclick="setPipeStyle('data')">Bus de Datos (-o-)</button>
+      <button id="pipe-btn" onclick="togglePipeMode()">Trazar Trazo</button>
+      <span style="font-size: 11px; color:#94a3b8;">Tipo:</span>
+      <button id="pipe-process" class="btn-pipe-type selected" onclick="setPipeStyle('process')">Tubería Principal</button>
+      <button id="pipe-secondary" class="btn-pipe-type" onclick="setPipeStyle('secondary')">Tubería Auxiliar</button>
+      <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Eléctrica (---)</button>
+      <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Neumática (//)</button>
+      <button id="pipe-hydraulic" class="btn-pipe-type" onclick="setPipeStyle('hydraulic')">Hidráulica (-T-)</button>
+      <button id="pipe-capillary" class="btn-pipe-type" onclick="setPipeStyle('capillary')">Capilar (-X-)</button>
+      <button id="pipe-data" class="btn-pipe-type" onclick="setPipeStyle('data')">Bus Datos (-o-)</button>
+      <button id="pipe-wireless" class="btn-pipe-type" onclick="setPipeStyle('wireless')">Inalámbrica (~)</button>
+      <button id="pipe-air" class="btn-pipe-type" onclick="setPipeStyle('air')">Aire IA</button>
       
-      <button class="btn-delete-item" onclick="deleteSelectedItem()" title="Eliminar seleccionado (o presiona tecla Supr / Delete)">✕ Eliminar Seleccionado</button>
-      <button class="btn-danger" onclick="clearCanvas()">Limpiar Todo</button>
+      <button class="btn-delete-item" onclick="deleteSelectedItem()" title="Eliminar seleccionado (o tecla Supr / Delete)">✕ Eliminar</button>
+      <button class="btn-danger" onclick="clearCanvas()">Limpiar</button>
     </div>
     <div class="toolbar-group">
       <button class="btn-export" onclick="exportSVG()">Exportar SVG</button>
@@ -246,7 +243,7 @@
         </div>
       </div>
 
-      <!-- 2. BOMBAS Y MOTORES -->
+      <!-- 2. MAQUINARIA Y ACCIONAMIENTOS -->
       <div class="category-box">
         <div class="category-title">Bombas y Motores</div>
         <div class="category-grid">
@@ -354,7 +351,7 @@
       return el;
     }
 
-    // GESTIÓN DE SELECCIÓN Y ELIMINACIÓN
+    // SELECCIÓN Y ELIMINACIÓN
     function selectElement(elem) {
       if (selectedTarget) {
         selectedTarget.classList.remove('is-selected');
@@ -379,7 +376,6 @@
       }
     }
 
-    // Tecla Supr / Delete / Backspace
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Delete' || e.key === 'Backspace' || e.key === 'Supr') {
         if (selectedTarget && document.activeElement.tagName !== 'INPUT') {
@@ -388,7 +384,6 @@
       }
     });
 
-    // Deseleccionar al hacer clic en zona vacía del fondo
     canvas.addEventListener('mousedown', (e) => {
       if (e.target === canvas) {
         clearSelection();
@@ -823,7 +818,6 @@
       elem.addEventListener('mousedown', handleStart);
       elem.addEventListener('touchstart', handleStart, { passive: false });
 
-      // Doble clic para cambiar etiqueta
       elem.addEventListener('dblclick', (e) => {
         e.stopPropagation();
         const texts = elem.querySelectorAll('text');
@@ -835,7 +829,6 @@
         }
       });
 
-      // Clic derecho para borrar
       elem.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -859,6 +852,11 @@
           l.setAttribute('x2', pos.x);
           l.setAttribute('y2', pos.y);
         });
+        const txt = activePipeGroup.querySelector('text');
+        if (txt) {
+          txt.setAttribute('x', (parseFloat(lines[0].getAttribute('x1')) + pos.x) / 2);
+          txt.setAttribute('y', (parseFloat(lines[0].getAttribute('y1')) + pos.y) / 2 - 8);
+        }
       }
     }
 
@@ -874,7 +872,7 @@
     function togglePipeMode() {
       isPipeMode = !isPipeMode;
       pipeBtn.classList.toggle('active-mode', isPipeMode);
-      pipeBtn.textContent = isPipeMode ? 'Modo Trazado (Activo)' : 'Trazar Línea / Tubería';
+      pipeBtn.textContent = isPipeMode ? 'Modo Trazado (Activo)' : 'Trazar Trazo';
       canvas.style.cursor = isPipeMode ? 'cell' : 'crosshair';
       activePipeGroup = null;
       clearSelection();
@@ -886,17 +884,15 @@
       document.getElementById(`pipe-${type}`).classList.add('selected');
     }
 
-    // TRAZADO Y GESTIÓN ROBUSTA DE LÍNEAS / TUBERÍAS
+    // TRAZADO COMPLETO CON CATÁLOGO ISA S5.1
     canvas.addEventListener('mousedown', (e) => {
       if (!isPipeMode || e.target.closest('.symbol-group')) return;
       const pos = getCoords(e);
 
       if (!activePipeGroup) {
-        // Crear grupo contenedor de la línea
         activePipeGroup = document.createElementNS(SVG_NS, 'g');
         activePipeGroup.setAttribute('class', 'pipe-group');
 
-        // Línea invisible de 22px de ancho para facilitar el clic/toque
         const hitArea = document.createElementNS(SVG_NS, 'line');
         hitArea.setAttribute('class', 'pipe-hit-area');
         hitArea.setAttribute('x1', pos.x);
@@ -904,10 +900,9 @@
         hitArea.setAttribute('x2', pos.x);
         hitArea.setAttribute('y2', pos.y);
         hitArea.setAttribute('stroke', 'transparent');
-        hitArea.setAttribute('stroke-width', '22');
+        hitArea.setAttribute('stroke-width', '24');
         hitArea.setAttribute('cursor', 'pointer');
 
-        // Línea visible con el estilo correspondiente
         const visLine = document.createElementNS(SVG_NS, 'line');
         visLine.setAttribute('class', 'pipe-visible');
         visLine.setAttribute('x1', pos.x);
@@ -916,10 +911,14 @@
         visLine.setAttribute('y2', pos.y);
         visLine.setAttribute('cursor', 'pointer');
 
+        // APLICACIÓN DE ESTILOS SEGÚN NORMA ISA
         if (pipeType === 'process') {
           visLine.setAttribute('stroke', '#38bdf8');
           visLine.setAttribute('stroke-width', '3.5');
           visLine.setAttribute('marker-end', 'url(#arrow)');
+        } else if (pipeType === 'secondary') {
+          visLine.setAttribute('stroke', '#94a3b8');
+          visLine.setAttribute('stroke-width', '2');
         } else if (pipeType === 'electric') {
           visLine.setAttribute('stroke', '#fbbf24');
           visLine.setAttribute('stroke-width', '2');
@@ -928,17 +927,33 @@
           visLine.setAttribute('stroke', '#f87171');
           visLine.setAttribute('stroke-width', '2');
           visLine.setAttribute('stroke-dasharray', '14,4,2,4');
+        } else if (pipeType === 'hydraulic') {
+          visLine.setAttribute('stroke', '#fb923c');
+          visLine.setAttribute('stroke-width', '2');
+          visLine.setAttribute('stroke-dasharray', '16,6,4,6');
+        } else if (pipeType === 'capillary') {
+          visLine.setAttribute('stroke', '#e879f9');
+          visLine.setAttribute('stroke-width', '2');
+          visLine.setAttribute('stroke-dasharray', '10,4,2,4,2,4');
         } else if (pipeType === 'data') {
           visLine.setAttribute('stroke', '#a78bfa');
           visLine.setAttribute('stroke-width', '2');
           visLine.setAttribute('stroke-dasharray', '8,6');
+        } else if (pipeType === 'wireless') {
+          visLine.setAttribute('stroke', '#4ade80');
+          visLine.setAttribute('stroke-width', '2.5');
+          visLine.setAttribute('stroke-dasharray', '3,5');
+        } else if (pipeType === 'air') {
+          visLine.setAttribute('stroke', '#38bdf8');
+          visLine.setAttribute('stroke-width', '2');
+          const txt = createSVGText('IA', pos.x, pos.y - 8, '#38bdf8', '10px', 'bold');
+          activePipeGroup.appendChild(txt);
         }
 
         activePipeGroup.appendChild(visLine);
         activePipeGroup.appendChild(hitArea);
         pipesLayer.appendChild(activePipeGroup);
 
-        // Eventos de selección y borrado vinculados al grupo de tubería
         const bindPipe = (elem) => {
           elem.addEventListener('mousedown', (evt) => {
             if (!isPipeMode) {
@@ -950,7 +965,7 @@
           elem.addEventListener('contextmenu', (evt) => {
             evt.preventDefault();
             evt.stopPropagation();
-            if (confirm('¿Eliminar este tramo de tubería/línea?')) {
+            if (confirm('¿Eliminar este tramo de línea/tubería?')) {
               if (selectedTarget === elem) selectedTarget = null;
               elem.remove();
             }
@@ -960,7 +975,6 @@
         bindPipe(activePipeGroup);
 
       } else {
-        // Fijar el final de la tubería
         activePipeGroup = null;
       }
     });
