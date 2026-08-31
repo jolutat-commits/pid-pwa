@@ -90,16 +90,10 @@
       <button class="btn-delete-item" onclick="deleteSelectedItem()" title="Eliminar seleccionado">✕</button>
 
       <button id="pipe-btn" onclick="togglePipeMode()">Trazar Línea (90°)</button>
-      
-      <!-- LÍNEAS EXACTAS SEGÚN NORMA ANSI/ISA-5.1-2024 -->
       <button id="pipe-process" class="btn-pipe-type selected" onclick="setPipeStyle('process')">Tubería Principal <span>Proceso</span></button>
-      <button id="pipe-secondary" class="btn-pipe-type" onclick="setPipeStyle('secondary')">Línea Indefinida <span>PFD / Genérica</span></button>
-      <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Señal Neumática <span>[IA / PA] //</span></button>
-      <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Señal Eléctrica <span>[ES] - - -</span></button>
-      <button id="pipe-hydraulic" class="btn-pipe-type" onclick="setPipeStyle('hydraulic')">Señal Hidráulica <span>[HS] T T T</span></button>
-      <button id="pipe-capillary" class="btn-pipe-type" onclick="setPipeStyle('capillary')">Tubo Capilar <span>x x x</span></button>
+      <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Señal Neumática <span>[IA / PA]</span></button>
+      <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Señal Eléctrica <span>[ES]</span></button>
       <button id="pipe-data" class="btn-pipe-type" onclick="setPipeStyle('data')">Bus de Datos <span>DCS / PLC</span></button>
-      <button id="pipe-wireless" class="btn-pipe-type" onclick="setPipeStyle('wireless')">Inalámbrica <span>)))</span></button>
     </div>
 
     <div class="toolbar-group">
@@ -108,7 +102,6 @@
       <button class="btn-project" onclick="saveProjectJSON()">💾 Guardar</button>
       <button class="btn-project" onclick="document.getElementById('load-json-input').click()">📂 Cargar</button>
       <input type="file" id="load-json-input" style="display: none;" accept=".json" onchange="loadProjectJSON(event)">
-      <button class="btn-export" onclick="exportSVG()">SVG</button>
       <button class="btn-export" onclick="exportPNG()">PNG</button>
       <button class="btn-danger" onclick="clearCanvas()">Limpiar</button>
     </div>
@@ -143,6 +136,7 @@
     
     let isPipeMode = false, pipeType = 'process', pipeStartPoint = null, activePipeGroup = null;
     let draggingElement = null, draggingNode = null, selectedTarget = null, offset = { x: 0, y: 0 };
+    let lastAIText = `Ejercicio 1: Sistema de control de nivel y temperatura de un tanque de proceso TK-101 con agitador M-101, serpentín de calentamiento E-101, bomba de salida P-101, termopozo TE-101, válvula de control y controlador TIC-101.`;
 
     function txt(t, y=0, size="10px", color="#ffffff") { return `<text x="0" y="${y}" fill="${color}" font-size="${size}" font-weight="bold" text-anchor="middle" dominant-baseline="central" font-family="sans-serif">${t}</text>`; }
 
@@ -176,26 +170,29 @@
     }
     renderSidebar();
 
-    // --- GENERADOR INTELIGENTE POR TEXTO (TEXT-TO-P&ID) ---
+    // --- MODAL DINÁMICO DE IA / GENERACIÓN POR TEXTO ---
     function openAIModal() {
-      const defaultText = `Ejercicio 1: Sistema de control de nivel y temperatura de un tanque de proceso TK-101 con agitador M-101, serpentín de calentamiento E-101, bomba de salida P-101, termopozo TE-101, válvula de control de vapor y controlador TIC-101.`;
       let html = `<div class="bom-modal" id="ai-modal"><div class="bom-content">
         <div class="bom-header"><h2>🤖 Generador Automático de P&ID (IA)</h2><span class="close-bom" onclick="document.getElementById('ai-modal').remove()">&times;</span></div>
-        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Pega tu ejercicio. El sistema ubicará los equipos y trazará automáticamente sus líneas y lazos correspondientes:</p>
-        <textarea class="ai-textarea" id="ai-input">${defaultText}</textarea>
-        <div style="text-align: right;"><button class="btn-ai" onclick="processAIText()">⚡ Generar Diagrama y Conexiones</button></div>
+        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Cambia o escribe un nuevo ejercicio. El generador creará los equipos y sus líneas de conexión ordenadas:</p>
+        <textarea class="ai-textarea" id="ai-input">${lastAIText}</textarea>
+        <div style="text-align: right;"><button class="btn-ai" onclick="processAIText()">⚡ Generar / Actualizar Diagrama</button></div>
       </div></div>`;
+      const existingModal = document.getElementById('ai-modal');
+      if(existingModal) existingModal.remove();
       const div = document.createElement('div'); div.innerHTML = html; document.body.appendChild(div.firstElementChild);
     }
 
     function processAIText() {
-      const text = document.getElementById('ai-input').value.toUpperCase();
+      const textarea = document.getElementById('ai-input');
+      if(!textarea) return;
+      lastAIText = textarea.value;
+      const text = lastAIText.toUpperCase();
       document.getElementById('ai-modal').remove();
       saveState();
       
       symbolsLayer.innerHTML = ''; pipesLayer.innerHTML = '';
 
-      // Posicionamiento inteligente de equipos para el ejercicio de tanque
       const elementsMap = [
         { type: 'tk_vert', x: 350, y: 320, tag: 'TK-101' },
         { type: 'motor_ac', x: 350, y: 210, tag: 'M-101' },
@@ -206,7 +203,6 @@
         { type: 'p_centrif', x: 350, y: 500, tag: 'P-101' }
       ];
 
-      const createdSymbols = {};
       elementsMap.forEach(el => {
         const group = document.createElementNS(SVG_NS, 'g');
         group.setAttribute('class', 'symbol-group');
@@ -219,15 +215,14 @@
 
         symbolsLayer.appendChild(group);
         setupSymbolEvents(group);
-        createdSymbols[el.tag] = { x: el.x, y: el.y };
       });
 
-      // Trazar tuberías y señales inteligentes automáticas basadas en la norma ISA
+      // Trazado automático de tuberías de proceso y señales
       const pipesMap = [
-        { from: {x: 350, y: 430}, to: {x: 350, y: 500}, type: 'process' }, // Tanque a Bomba
-        { from: {x: 200, y: 340}, to: {x: 315, y: 340}, type: 'process' }, // Válvula a Serpentín
-        { from: {x: 440, y: 320}, to: {x: 530, y: 320}, type: 'electric' }, // TE a TIC (Señal Eléctrica)
-        { from: {x: 550, y: 342}, to: {x: 200, y: 364}, type: 'pneumatic' }  // TIC a FCV (Señal Neumática)
+        { from: {x: 350, y: 430}, to: {x: 350, y: 500}, type: 'process' },
+        { from: {x: 200, y: 340}, to: {x: 315, y: 340}, type: 'process' },
+        { from: {x: 440, y: 320}, to: {x: 530, y: 320}, type: 'electric' },
+        { from: {x: 550, y: 342}, to: {x: 200, y: 364}, type: 'pneumatic' }
       ];
 
       pipesMap.forEach(p => {
@@ -246,9 +241,9 @@
         if (p.type === 'process') {
           visPath.setAttribute('stroke', '#38bdf8'); visPath.setAttribute('stroke-width', '3.5'); visPath.setAttribute('marker-end', 'url(#arrow)');
         } else if (p.type === 'pneumatic') {
-          visPath.setAttribute('stroke', '#f87171'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '14,4,2,4'); // Patrón ISA Neumática
+          visPath.setAttribute('stroke', '#f87171'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '14,4,2,4');
         } else if (p.type === 'electric') {
-          visPath.setAttribute('stroke', '#fbbf24'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '6,4'); // Patrón ISA Eléctrica
+          visPath.setAttribute('stroke', '#fbbf24'); visPath.setAttribute('stroke-width', '2'); visPath.setAttribute('stroke-dasharray', '6,4');
         }
 
         const hitArea = document.createElementNS(SVG_NS, 'path');
@@ -415,7 +410,7 @@
     }
     function saveProjectJSON() {
       clearSelection(); symbolsLayer.querySelectorAll('.pipe-node').forEach(n => n.remove());
-      const blob = new Blob([JSON.stringify({ version: "8.1", symbolsHTML: symbolsLayer.innerHTML, pipesHTML: pipesLayer.innerHTML }, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify({ version: "8.2", symbolsHTML: symbolsLayer.innerHTML, pipesHTML: pipesLayer.innerHTML }, null, 2)], { type: 'application/json' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'proyecto.json'; a.click();
     }
     function loadProjectJSON(event) {
