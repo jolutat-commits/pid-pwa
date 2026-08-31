@@ -1,0 +1,15 @@
+{
+  "name": "P&ID Designer Studio",
+  "short_name": "P&ID Studio",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1e1e2e",
+  "theme_color": "#11111b",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%233b82f6'/><text x='50' y='60' fill='white' font-size='30' text-anchor='middle' font-family='sans-serif'>PID</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

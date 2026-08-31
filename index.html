@@ -1,0 +1,46 @@
+HTML
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>P&ID Studio</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#11111b">
+</head>
+<body>
+  <header>
+    <div class="toolbar">
+      <button onclick="addSymbol('tank')">+ Estanque</button>
+      <button onclick="addSymbol('pump')">+ Bomba</button>
+      <button onclick="addSymbol('valve')">+ Válvula</button>
+      <button onclick="addSymbol('instrument')">+ Instrumento ISA</button>
+      <button id="pipe-mode-btn" onclick="togglePipeMode()">Trazar Tubería</button>
+      <button onclick="clearCanvas()">Limpiar</button>
+    </div>
+    <div>
+      <button onclick="exportSVG()">Exportar SVG</button>
+      <button onclick="exportPNG()">Exportar PNG</button>
+    </div>
+  </header>
+
+  <div id="canvas-container">
+    <svg id="pid-canvas" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#89b4fa" />
+        </marker>
+      </defs>
+      <g id="pipes-layer"></g>
+      <g id="symbols-layer"></g>
+    </svg>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+</body>
