@@ -56,131 +56,56 @@
       transition: all 0.2s;
     }
 
-    button:hover {
-      background-color: #3b3e57;
-      border-color: #5d6287;
-    }
+    button:hover { background-color: #3b3e57; border-color: #5d6287; }
+    button:active { transform: scale(0.96); }
+    button.active-mode { background-color: #10b981 !important; border-color: #059669 !important; color: #ffffff !important; }
 
-    button:active {
-      transform: scale(0.96);
-    }
-
-    button.active-mode {
-      background-color: #10b981 !important;
-      border-color: #059669 !important;
-      color: #ffffff !important;
-    }
-
-    .btn-pipe-type {
-      background-color: #181822;
-      font-size: 11px;
-    }
-
-    .btn-pipe-type.selected {
-      border-color: #38bdf8;
-      background-color: #0284c7;
-      color: #ffffff;
-    }
-
+    .btn-pipe-type { background-color: #181822; font-size: 11px; }
+    .btn-pipe-type.selected { border-color: #38bdf8; background-color: #0284c7; color: #ffffff; }
     .btn-history { background-color: #334155; border-color: #475569; }
     .btn-project { background-color: #475569; border-color: #64748b; }
     .btn-bom { background-color: #059669; border-color: #10b981; color: white;}
     .btn-bom:hover { background-color: #047857; }
 
-    .btn-delete-item {
-      background-color: #e11d48;
-      border-color: #be123c;
-      color: #ffffff;
-    }
+    .btn-delete-item { background-color: #e11d48; border-color: #be123c; color: #ffffff; }
     .btn-delete-item:hover { background-color: #be123c; }
-
     .btn-export { background-color: #2563eb; border-color: #1d4ed8; color: #ffffff; }
     .btn-danger { background-color: #7f1d1d; border-color: #991b1b; color: #fca5a5; }
 
-    #main-layout {
-      flex: 1;
-      display: flex;
-      height: calc(100vh - 52px);
-      overflow: hidden;
-    }
+    #main-layout { flex: 1; display: flex; height: calc(100vh - 52px); overflow: hidden; }
 
     #sidebar {
-      width: 280px;
-      background-color: #161620;
-      border-right: 2px solid #2e2e40;
-      overflow-y: auto;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      width: 280px; background-color: #161620; border-right: 2px solid #2e2e40;
+      overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px;
     }
 
-    /* Scroll personalizado para la barra lateral */
     #sidebar::-webkit-scrollbar { width: 6px; }
     #sidebar::-webkit-scrollbar-track { background: #161620; }
     #sidebar::-webkit-scrollbar-thumb { background: #3f4259; border-radius: 3px; }
 
-    .category-box {
-      border: 1px solid #272738;
-      border-radius: 6px;
-      background-color: #1b1b26;
-      padding: 8px;
-    }
-
+    .category-box { border: 1px solid #272738; border-radius: 6px; background-color: #1b1b26; padding: 8px; }
     .category-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.7px;
-      color: #94a3b8;
-      margin-bottom: 6px;
-      font-weight: bold;
-      border-bottom: 1px solid #2e2e40;
-      padding-bottom: 4px;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.7px; color: #94a3b8;
+      margin-bottom: 6px; font-weight: bold; border-bottom: 1px solid #2e2e40; padding-bottom: 4px;
     }
-
-    .category-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5px;
-    }
+    .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 
     .item-btn {
-      background-color: #222333;
-      border: 1px solid #33354d;
-      color: #cbd5e1;
-      padding: 7px 4px;
-      border-radius: 4px;
-      font-size: 11px;
-      text-align: center;
-      cursor: pointer;
-      line-height: 1.2;
+      background-color: #222333; border: 1px solid #33354d; color: #cbd5e1;
+      padding: 7px 4px; border-radius: 4px; font-size: 11px; text-align: center;
+      cursor: pointer; line-height: 1.2;
     }
-
-    .item-btn:hover {
-      background-color: #3b82f6;
-      border-color: #60a5fa;
-      color: #ffffff;
-    }
+    .item-btn:hover { background-color: #3b82f6; border-color: #60a5fa; color: #ffffff; }
 
     #canvas-container {
-      flex: 1;
-      position: relative;
-      background-color: #121217;
+      flex: 1; position: relative; background-color: #121217;
       background-image: radial-gradient(#2b2b3d 1.5px, transparent 1.5px);
-      background-size: 24px 24px;
-      overflow: hidden;
+      background-size: 24px 24px; overflow: hidden;
     }
-
-    svg#pid-canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      cursor: crosshair;
-    }
+    svg#pid-canvas { width: 100%; height: 100%; display: block; cursor: crosshair; }
 
     .symbol-group { cursor: move; }
     .pipe-group { cursor: pointer; }
-
     .symbol-group.is-selected { outline: 2px dashed #facc15 !important; outline-offset: 4px; }
     .pipe-group.is-selected .pipe-visible { stroke: #facc15 !important; stroke-width: 4.5px !important; marker-end: url(#arrow-selected) !important; }
     .pipe-group.is-selected text { fill: #facc15 !important; }
@@ -208,12 +133,10 @@
 
   <header>
     <div class="toolbar-group">
-      <!-- HISTORIAL Y EDICIÓN -->
       <button class="btn-history" onclick="undoAction()" title="Deshacer (Ctrl + Z)">↶</button>
       <button class="btn-history" onclick="redoAction()" title="Rehacer (Ctrl + Y)">↷</button>
       <button class="btn-delete-item" onclick="deleteSelectedItem()" title="Eliminar seleccionado">✕</button>
 
-      <!-- TRAZADO ORTOGONAL -->
       <button id="pipe-btn" onclick="togglePipeMode()">Trazar Línea (90°)</button>
       <button id="pipe-process" class="btn-pipe-type selected" onclick="setPipeStyle('process')">Tubería Principal</button>
       <button id="pipe-secondary" class="btn-pipe-type" onclick="setPipeStyle('secondary')">Secundaria</button>
@@ -221,7 +144,6 @@
       <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Neumática</button>
     </div>
 
-    <!-- PROYECTO Y EXPORTACIÓN -->
     <div class="toolbar-group">
       <button class="btn-bom" onclick="generateBOM()">📋 Generar BOM</button>
       <button class="btn-project" onclick="saveProjectJSON()">💾 Guardar JSON</button>
@@ -234,21 +156,22 @@
 
   <div id="main-layout">
     <aside id="sidebar">
-      <!-- 1. EQUIPOS DE PROCESO -->
+      <!-- EQUIPOS DE PROCESO -->
       <div class="category-box">
         <div class="category-title">Equipos de Proceso</div>
         <div class="category-grid">
           <button class="item-btn" onclick="addSymbol('tank_vertical')">Estanque Vertical</button>
           <button class="item-btn" onclick="addSymbol('tank_horizontal')">Estanque Horizontal</button>
-          <button class="item-btn" onclick="addSymbol('tank_jacket')">Tanque Enchaquetado</button>
-          <button class="item-btn" onclick="addSymbol('heat_exchanger')">Intercambiador Calor</button>
+          <button class="item-btn" onclick="addSymbol('tank_float_roof')">Techo Flotante</button>
+          <button class="item-btn" onclick="addSymbol('tank_jacket')">Tanque Enchaq.</button>
+          <button class="item-btn" onclick="addSymbol('heat_exchanger')">Intercambiador (Tubo)</button>
+          <button class="item-btn" onclick="addSymbol('heat_exch_circle')">Intercambiador (Circ)</button>
           <button class="item-btn" onclick="addSymbol('dest_tower')">Torre Destilación</button>
           <button class="item-btn" onclick="addSymbol('furnace')">Horno / Caldera</button>
-          <button class="item-btn" onclick="addSymbol('silo')">Tolva / Silo</button>
         </div>
       </div>
 
-      <!-- NUEVO: FILTROS Y SEPARADORES -->
+      <!-- FILTROS Y SEPARADORES -->
       <div class="category-box">
         <div class="category-title">Filtros y Centrífugas</div>
         <div class="category-grid">
@@ -258,20 +181,21 @@
         </div>
       </div>
 
-      <!-- NUEVO: MANEJO DE SÓLIDOS -->
+      <!-- MANEJO DE SÓLIDOS -->
       <div class="category-box">
         <div class="category-title">Manejo de Sólidos</div>
         <div class="category-grid">
           <button class="item-btn" onclick="addSymbol('crusher')">Trituradora / Molino</button>
           <button class="item-btn" onclick="addSymbol('feeder_rotary')">Alimentador Rotat.</button>
           <button class="item-btn" onclick="addSymbol('dryer')">Secador Ind.</button>
+          <button class="item-btn" onclick="addSymbol('silo')">Tolva / Silo</button>
           <button class="item-btn" onclick="addSymbol('conveyor')">Banda Transportadora</button>
         </div>
       </div>
 
-      <!-- 2. MAQUINARIA Y ACCIONAMIENTOS -->
+      <!-- BOMBAS Y MOTORES -->
       <div class="category-box">
-        <div class="category-title">Bombas y Motores</div>
+        <div class="category-title">Bombas y Motores (ISO)</div>
         <div class="category-grid">
           <button class="item-btn" onclick="addSymbol('pump_centrifugal')">Bomba Centrífuga</button>
           <button class="item-btn" onclick="addSymbol('pump_positive')">Desplaz. Positivo</button>
@@ -282,26 +206,27 @@
         </div>
       </div>
 
-      <!-- 3. SENSORES Y ELEMENTOS PRIMARIOS -->
+      <!-- SENSORES Y ELEMENTOS PRIMARIOS -->
       <div class="category-box">
         <div class="category-title">Sensores y Elementos Primarios</div>
         <div class="category-grid">
           <button class="item-btn" onclick="addSymbol('elem_orifice')">Placa Orificio (FE)</button>
           <button class="item-btn" onclick="addSymbol('elem_venturi')">Tubo Venturi (FE)</button>
+          <button class="item-btn" onclick="addSymbol('elem_mag_flow')">Flujómetro Mag.</button>
           <button class="item-btn" onclick="addSymbol('elem_rotameter')">Rotámetro (FI)</button>
           <button class="item-btn" onclick="addSymbol('elem_thermowell')">Termopozo / RTD (TE)</button>
           <button class="item-btn" onclick="addSymbol('elem_gauge')">Manómetro Local (PG)</button>
           <button class="item-btn" onclick="addSymbol('elem_level_glass')">Mirilla Nivel (LG)</button>
-          <button class="item-btn" onclick="addSymbol('elem_steam_trap')">Trampa de Vapor</button>
           <button class="item-btn" onclick="addSymbol('elem_rupture_disc')">Disco Ruptura (PSE)</button>
         </div>
       </div>
 
-      <!-- 4. VÁLVULAS Y ACTUADORES -->
+      <!-- VÁLVULAS Y ACTUADORES -->
       <div class="category-box">
         <div class="category-title">Válvulas y Actuadores</div>
         <div class="category-grid">
           <button class="item-btn" onclick="addSymbol('valve_gate')">Válvula Manual</button>
+          <button class="item-btn" onclick="addSymbol('valve_angle')">Válvula Ángulo</button>
           <button class="item-btn" onclick="addSymbol('valve_check')">Válvula Check</button>
           <button class="item-btn" onclick="addSymbol('valve_control_diaph')">Válvula Diafragma</button>
           <button class="item-btn" onclick="addSymbol('valve_solenoid')">Electroválvula (S)</button>
@@ -312,17 +237,17 @@
         </div>
       </div>
 
-      <!-- 5. INSTRUMENTACIÓN Y RELÉS ISA -->
+      <!-- INSTRUMENTACIÓN Y RELÉS ISA -->
       <div class="category-box">
         <div class="category-title">Instrumentación y Relés ISA</div>
         <div class="category-grid">
           <button class="item-btn" onclick="addSymbol('inst_field')">Inst. en Campo</button>
           <button class="item-btn" onclick="addSymbol('inst_panel')">Inst. en Panel</button>
-          <button class="item-btn" onclick="addSymbol('inst_plc')">Bloque PLC / DCS</button>
+          <button class="item-btn" onclick="addSymbol('inst_plc')">Bloque PLC</button>
+          <button class="item-btn" onclick="addSymbol('inst_computer')">Función Computador</button>
           <button class="item-btn" onclick="addSymbol('relay_sqrt')">Relé Raíz (FY √)</button>
           <button class="item-btn" onclick="addSymbol('relay_sum')">Relé Sumador (FY Σ)</button>
           <button class="item-btn" onclick="addSymbol('relay_ip')">Convertidor (FY I/P)</button>
-          <button class="item-btn" onclick="addSymbol('relay_mult')">Relé Razón (FY A/B)</button>
           <button class="item-btn" onclick="addSymbol('inst_switch')">Switch Alarma (LSH)</button>
         </div>
       </div>
@@ -363,26 +288,29 @@
     const symbolDictionary = {
       'tank_vertical': 'Estanque Vertical',
       'tank_horizontal': 'Estanque Horizontal',
+      'tank_float_roof': 'Tanque de Techo Flotante',
       'tank_jacket': 'Tanque Enchaquetado',
-      'heat_exchanger': 'Intercambiador de Calor',
+      'heat_exchanger': 'Intercambiador de Calor (Tubos)',
+      'heat_exch_circle': 'Intercambiador de Calor (Circular)',
       'dest_tower': 'Torre de Destilación',
       'furnace': 'Horno / Caldera',
       'silo': 'Tolva / Silo',
-      'filter_generic': 'Filtro Genérico',         // NUEVO
-      'centrifuge': 'Centrífuga',                  // NUEVO
+      'filter_generic': 'Filtro Genérico',
+      'centrifuge': 'Centrífuga',
       'cyclone': 'Ciclón Separador',
-      'crusher': 'Trituradora / Molino',           // NUEVO
-      'feeder_rotary': 'Alimentador Rotativo',     // NUEVO
-      'dryer': 'Secador Industrial',               // NUEVO
+      'crusher': 'Trituradora / Molino',
+      'feeder_rotary': 'Alimentador Rotativo',
+      'dryer': 'Secador Industrial',
       'conveyor': 'Banda Transportadora',
-      'pump_centrifugal': 'Bomba Centrífuga',
-      'pump_positive': 'Bomba Desplaz. Positivo',
+      'pump_centrifugal': 'Bomba Centrífuga (ISO)',
+      'pump_positive': 'Bomba Desplazamiento Positivo (ISO)',
       'compressor': 'Compresor de Gases',
       'motor_electric': 'Motor Eléctrico',
-      'generator': 'Generador Eléctrico',          // NUEVO
+      'generator': 'Generador Eléctrico',
       'agitator': 'Agitador / Mezclador',
       'elem_orifice': 'Placa Orificio (FE)',
       'elem_venturi': 'Tubo Venturi (FE)',
+      'elem_mag_flow': 'Flujómetro Magnético (FE)',
       'elem_rotameter': 'Rotámetro (FI)',
       'elem_thermowell': 'Termopozo / RTD (TE)',
       'elem_gauge': 'Manómetro Local (PG)',
@@ -390,6 +318,7 @@
       'elem_steam_trap': 'Trampa de Vapor',
       'elem_rupture_disc': 'Disco de Ruptura (PSE)',
       'valve_gate': 'Válvula Manual / Compuerta',
+      'valve_angle': 'Válvula de Ángulo',
       'valve_check': 'Válvula de Retención (Check)',
       'valve_control_diaph': 'Válvula de Control',
       'valve_solenoid': 'Electroválvula',
@@ -399,7 +328,8 @@
       'valve_butterfly': 'Válvula Mariposa',
       'inst_field': 'Instrumento en Campo',
       'inst_panel': 'Instrumento en Panel',
-      'inst_plc': 'Bloque de Control PLC / DCS',
+      'inst_plc': 'Bloque de Control PLC',
+      'inst_computer': 'Función de Computador',
       'relay_sqrt': 'Relé Extractor de Raíz (FY √)',
       'relay_sum': 'Relé Sumador (FY Σ)',
       'relay_ip': 'Convertidor de Señal (FY I/P)',
@@ -407,7 +337,6 @@
       'inst_switch': 'Switch / Interruptor de Alarma'
     };
 
-    // HISTORIAL DESHACER / REHACER
     const undoStack = [];
     const redoStack = [];
 
@@ -492,7 +421,7 @@
       return `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
     }
 
-    // AÑADIR SÍMBOLOS AL LIENZO
+    // --- AÑADIR SÍMBOLOS AL LIENZO ---
     function addSymbol(type) {
       saveState();
       const rect = canvas.getBoundingClientRect();
@@ -523,6 +452,17 @@
         group.appendChild(body);
         group.appendChild(createSVGText('TK-102', 0, 0, '#ffffff', '12px', 'bold'));
       }
+      else if (type === 'tank_float_roof') {
+        const body = document.createElementNS(SVG_NS, 'path');
+        body.setAttribute('d', 'M -40 -40 L -40 40 L 40 40 L 40 -40');
+        body.setAttribute('fill', '#202230'); body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2.5');
+        const roof = document.createElementNS(SVG_NS, 'rect');
+        roof.setAttribute('x', '-35'); roof.setAttribute('y', '-10');
+        roof.setAttribute('width', '70'); roof.setAttribute('height', '10');
+        roof.setAttribute('fill', '#384260'); roof.setAttribute('stroke', '#ffffff'); roof.setAttribute('stroke-width', '2');
+        group.appendChild(body); group.appendChild(roof);
+        group.appendChild(createSVGText('TK-F', 0, 20, '#ffffff', '11px', 'bold'));
+      }
       else if (type === 'tank_jacket') {
         const outer = document.createElementNS(SVG_NS, 'rect');
         outer.setAttribute('x', '-48'); outer.setAttribute('y', '-40');
@@ -548,6 +488,17 @@
         wave.setAttribute('fill', 'none'); wave.setAttribute('stroke', '#38bdf8'); wave.setAttribute('stroke-width', '2.5');
         group.appendChild(body); group.appendChild(wave);
         group.appendChild(createSVGText('E-101', 0, 38, '#ffffff', '11px', 'bold'));
+      }
+      else if (type === 'heat_exch_circle') {
+        const circle = document.createElementNS(SVG_NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '25');
+        circle.setAttribute('fill', '#202230'); circle.setAttribute('stroke', '#ffffff'); circle.setAttribute('stroke-width', '2.5');
+        const zigzag = document.createElementNS(SVG_NS, 'path');
+        zigzag.setAttribute('d', 'M -18 -10 L -5 10 L 5 -10 L 18 10');
+        zigzag.setAttribute('fill', 'none'); zigzag.setAttribute('stroke', '#38bdf8'); zigzag.setAttribute('stroke-width', '2.5');
+        zigzag.setAttribute('stroke-linejoin', 'round');
+        group.appendChild(circle); group.appendChild(zigzag);
+        group.appendChild(createSVGText('E-102', 0, 36, '#ffffff', '11px', 'bold'));
       }
       else if (type === 'dest_tower') {
         const col = document.createElementNS(SVG_NS, 'rect');
@@ -580,7 +531,7 @@
         group.appendChild(createSVGText('SILO', 0, -5, '#ffffff', '11px', 'bold'));
       }
 
-      // NUEVOS: FILTROS, MANEJO DE SÓLIDOS Y SEPARADORES
+      // FILTROS, MANEJO DE SÓLIDOS Y SEPARADORES
       else if (type === 'filter_generic') {
         const box = document.createElementNS(SVG_NS, 'rect');
         box.setAttribute('x', '-25'); box.setAttribute('y', '-25');
@@ -642,26 +593,31 @@
         group.appendChild(createSVGText('FD-101', 0, 34, '#ffffff', '11px', 'bold'));
       }
 
-      // 2. BOMBAS Y ACCIONAMIENTOS
+      // 2. BOMBAS Y ACCIONAMIENTOS (CORREGIDAS A NORMA ISO)
       else if (type === 'pump_centrifugal') {
         const circle = document.createElementNS(SVG_NS, 'circle');
         circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '25');
         circle.setAttribute('fill', '#202230'); circle.setAttribute('stroke', '#ffffff'); circle.setAttribute('stroke-width', '2.5');
-        const imp = document.createElementNS(SVG_NS, 'path');
-        imp.setAttribute('d', 'M 0 -25 L 25 15 L -25 15 Z');
-        imp.setAttribute('fill', '#384260'); imp.setAttribute('stroke', '#ffffff'); imp.setAttribute('stroke-width', '2');
-        group.appendChild(circle); group.appendChild(imp);
-        group.appendChild(createSVGText('P-101', 0, 40, '#ffffff', '11px', 'bold'));
+        // Cuña inscrita apuntando hacia la derecha (Norma ISO)
+        const wedge = document.createElementNS(SVG_NS, 'path');
+        wedge.setAttribute('d', 'M -18 -12 L 15 0 L -18 12 Z');
+        wedge.setAttribute('fill', 'none'); wedge.setAttribute('stroke', '#ffffff'); wedge.setAttribute('stroke-width', '2');
+        group.appendChild(circle); group.appendChild(wedge);
+        group.appendChild(createSVGText('P-101', 0, 38, '#ffffff', '11px', 'bold'));
       }
       else if (type === 'pump_positive') {
         const circle = document.createElementNS(SVG_NS, 'circle');
         circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '25');
         circle.setAttribute('fill', '#202230'); circle.setAttribute('stroke', '#ffffff'); circle.setAttribute('stroke-width', '2.5');
-        const d1 = document.createElementNS(SVG_NS, 'polygon');
-        d1.setAttribute('points', '0,-20 20,0 0,20 -20,0');
-        d1.setAttribute('fill', '#384260'); d1.setAttribute('stroke', '#ffffff'); d1.setAttribute('stroke-width', '2');
-        group.appendChild(circle); group.appendChild(d1);
-        group.appendChild(createSVGText('P-DP', 0, 40, '#ffffff', '11px', 'bold'));
+        // Dos círculos internos intersectados (Norma ISO)
+        const c1 = document.createElementNS(SVG_NS, 'circle');
+        c1.setAttribute('cx', '-8'); c1.setAttribute('cy', '0'); c1.setAttribute('r', '10');
+        c1.setAttribute('fill', 'none'); c1.setAttribute('stroke', '#ffffff'); c1.setAttribute('stroke-width', '2');
+        const c2 = document.createElementNS(SVG_NS, 'circle');
+        c2.setAttribute('cx', '8'); c2.setAttribute('cy', '0'); c2.setAttribute('r', '10');
+        c2.setAttribute('fill', 'none'); c2.setAttribute('stroke', '#ffffff'); c2.setAttribute('stroke-width', '2');
+        group.appendChild(circle); group.appendChild(c1); group.appendChild(c2);
+        group.appendChild(createSVGText('P-DP', 0, 38, '#ffffff', '11px', 'bold'));
       }
       else if (type === 'compressor') {
         const path = document.createElementNS(SVG_NS, 'path');
@@ -730,6 +686,15 @@
         path.setAttribute('fill', '#202230'); path.setAttribute('stroke', '#ffffff'); path.setAttribute('stroke-width', '2');
         group.appendChild(path);
         group.appendChild(createSVGText('VENTURI', 0, 24, '#ffffff', '9px', 'bold'));
+      }
+      else if (type === 'elem_mag_flow') {
+        const box = document.createElementNS(SVG_NS, 'rect');
+        box.setAttribute('x', '-15'); box.setAttribute('y', '-15');
+        box.setAttribute('width', '30'); box.setAttribute('height', '30');
+        box.setAttribute('fill', '#202230'); box.setAttribute('stroke', '#ffffff'); box.setAttribute('stroke-width', '2.5');
+        group.appendChild(box);
+        group.appendChild(createSVGText('M', 0, 0, '#38bdf8', '14px', 'bold'));
+        group.appendChild(createSVGText('FE-M', 0, 26, '#ffffff', '10px', 'bold'));
       }
       else if (type === 'elem_rotameter') {
         const body = document.createElementNS(SVG_NS, 'path');
@@ -814,6 +779,13 @@
         handle.setAttribute('stroke', '#ffffff'); handle.setAttribute('stroke-width', '2.2');
         group.appendChild(body); group.appendChild(stem); group.appendChild(handle);
         group.appendChild(createSVGText('HV-101', 0, 26, '#ffffff', '10px', 'bold'));
+      }
+      else if (type === 'valve_angle') {
+        const body = document.createElementNS(SVG_NS, 'path');
+        body.setAttribute('d', 'M 0 0 L -15 -10 L -15 10 Z M 0 0 L -10 15 L 10 15 Z');
+        body.setAttribute('fill', '#384260'); body.setAttribute('stroke', '#ffffff'); body.setAttribute('stroke-width', '2');
+        group.appendChild(body);
+        group.appendChild(createSVGText('AV-101', 0, 26, '#ffffff', '10px', 'bold'));
       }
       else if (type === 'valve_check') {
         const body = document.createElementNS(SVG_NS, 'path');
@@ -919,6 +891,17 @@
         group.appendChild(createSVGText('PLC', 0, -4, '#38bdf8', '10px', 'bold'));
         group.appendChild(createSVGText('CPU', 0, 8, '#ffffff', '9px', 'bold'));
       }
+      else if (type === 'inst_computer') {
+        const hex = document.createElementNS(SVG_NS, 'polygon');
+        hex.setAttribute('points', '15,-22 22,0 15,22 -15,22 -22,0 -15,-22');
+        hex.setAttribute('fill', '#161620'); hex.setAttribute('stroke', '#38bdf8'); hex.setAttribute('stroke-width', '2');
+        const line = document.createElementNS(SVG_NS, 'line');
+        line.setAttribute('x1', '-22'); line.setAttribute('y1', '0'); line.setAttribute('x2', '22'); line.setAttribute('y2', '0');
+        line.setAttribute('stroke', '#38bdf8'); line.setAttribute('stroke-width', '1.5');
+        group.appendChild(hex); group.appendChild(line);
+        group.appendChild(createSVGText('FC', 0, -8, '#38bdf8', '11px', 'bold'));
+        group.appendChild(createSVGText('101', 0, 10, '#ffffff', '10px', 'bold'));
+      }
       else if (type === 'relay_sqrt') {
         const circle = document.createElementNS(SVG_NS, 'circle');
         circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
@@ -945,15 +928,6 @@
         group.appendChild(circle); group.appendChild(fnBadge);
         group.appendChild(createSVGText('LY', 0, -6, '#fbbf24', '11px', 'bold'));
         group.appendChild(createSVGText('101', 0, 8, '#ffffff', '10px', 'bold'));
-      }
-      else if (type === 'relay_mult') {
-        const circle = document.createElementNS(SVG_NS, 'circle');
-        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0'); circle.setAttribute('r', '22');
-        circle.setAttribute('fill', '#161620'); circle.setAttribute('stroke', '#fbbf24'); circle.setAttribute('stroke-width', '2');
-        const fnBadge = createSVGText('A/B', 18, -14, '#fbbf24', '10px', 'bold');
-        group.appendChild(circle); group.appendChild(fnBadge);
-        group.appendChild(createSVGText('FY', 0, -6, '#fbbf24', '11px', 'bold'));
-        group.appendChild(createSVGText('101C', 0, 8, '#ffffff', '9px', 'bold'));
       }
       else if (type === 'inst_switch') {
         const circle = document.createElementNS(SVG_NS, 'circle');
@@ -1035,7 +1009,7 @@
     function togglePipeMode() {
       isPipeMode = !isPipeMode;
       pipeBtn.classList.toggle('active-mode', isPipeMode);
-      pipeBtn.textContent = isPipeMode ? 'Modo Trazado 90° (Activo)' : 'Trazar Línea (90°)';
+      pipeBtn.textContent = isPipeMode ? 'Modo Trazado (Activo)' : 'Trazar Línea (90°)';
       canvas.style.cursor = isPipeMode ? 'cell' : 'crosshair';
       activePipeGroup = null;
       pipeStartPoint = null;
@@ -1207,7 +1181,6 @@
       document.body.removeChild(link);
     }
 
-    // JSON PROJECT EXPORT / IMPORT
     function saveProjectJSON() {
       clearSelection();
       const blob = new Blob([JSON.stringify({ version: "1.0", date: new Date().toISOString(), symbolsHTML: symbolsLayer.innerHTML, pipesHTML: pipesLayer.innerHTML }, null, 2)], { type: 'application/json' });
