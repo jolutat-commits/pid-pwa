@@ -82,36 +82,20 @@
       color: #ffffff;
     }
 
-    .btn-history {
-      background-color: #334155;
-      border-color: #475569;
-    }
-
-    .btn-project {
-      background-color: #475569;
-      border-color: #64748b;
-    }
+    .btn-history { background-color: #334155; border-color: #475569; }
+    .btn-project { background-color: #475569; border-color: #64748b; }
+    .btn-bom { background-color: #059669; border-color: #10b981; color: white;}
+    .btn-bom:hover { background-color: #047857; }
 
     .btn-delete-item {
       background-color: #e11d48;
       border-color: #be123c;
       color: #ffffff;
     }
-    .btn-delete-item:hover {
-      background-color: #be123c;
-    }
+    .btn-delete-item:hover { background-color: #be123c; }
 
-    .btn-export {
-      background-color: #2563eb;
-      border-color: #1d4ed8;
-      color: #ffffff;
-    }
-
-    .btn-danger {
-      background-color: #7f1d1d;
-      border-color: #991b1b;
-      color: #fca5a5;
-    }
+    .btn-export { background-color: #2563eb; border-color: #1d4ed8; color: #ffffff; }
+    .btn-danger { background-color: #7f1d1d; border-color: #991b1b; color: #fca5a5; }
 
     #main-layout {
       flex: 1;
@@ -189,27 +173,30 @@
       cursor: crosshair;
     }
 
-    .symbol-group {
-      cursor: move;
-    }
+    .symbol-group { cursor: move; }
+    .pipe-group { cursor: pointer; }
 
-    .pipe-group {
-      cursor: pointer;
-    }
+    .symbol-group.is-selected { outline: 2px dashed #facc15 !important; outline-offset: 4px; }
+    .pipe-group.is-selected .pipe-visible { stroke: #facc15 !important; stroke-width: 4.5px !important; marker-end: url(#arrow-selected) !important; }
+    .pipe-group.is-selected text { fill: #facc15 !important; }
 
-    .symbol-group.is-selected {
-      outline: 2px dashed #facc15 !important;
-      outline-offset: 4px;
+    /* ESTILOS DEL MODAL BOM (LISTA DE MATERIALES) */
+    .bom-modal {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000;
     }
-    
-    .pipe-group.is-selected .pipe-visible {
-      stroke: #facc15 !important;
-      stroke-width: 4.5px !important;
-      marker-end: url(#arrow-selected) !important;
+    .bom-content {
+      background: #1e1e2e; padding: 20px; border-radius: 8px; width: 650px; max-width: 95%; max-height: 90vh;
+      border: 1px solid #33334d; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; flex-direction: column;
     }
-    .pipe-group.is-selected text {
-      fill: #facc15 !important;
-    }
+    .bom-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .bom-header h2 { font-size: 18px; color: #38bdf8; }
+    .close-bom { cursor: pointer; font-size: 24px; color: #ef4444; font-weight: bold; }
+    .bom-table-container { overflow-y: auto; flex: 1; border: 1px solid #33334d; border-radius: 4px; }
+    .bom-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .bom-table th, .bom-table td { border-bottom: 1px solid #33334d; padding: 8px 12px; text-align: left; }
+    .bom-table th { background: #282a3a; color: #cbd5e1; position: sticky; top: 0; }
+    .bom-table tr:hover { background: #222333; }
   </style>
 </head>
 <body>
@@ -217,38 +204,32 @@
   <!-- BARRA SUPERIOR -->
   <header>
     <div class="toolbar-group">
-      <!-- HISTORIAL -->
-      <button class="btn-history" onclick="undoAction()" title="Deshacer (Ctrl + Z)">↶ Deshacer</button>
-      <button class="btn-history" onclick="redoAction()" title="Rehacer (Ctrl + Y)">↷ Rehacer</button>
+      <!-- HISTORIAL Y EDICIÓN -->
+      <button class="btn-history" onclick="undoAction()" title="Deshacer (Ctrl + Z)">↶</button>
+      <button class="btn-history" onclick="redoAction()" title="Rehacer (Ctrl + Y)">↷</button>
+      <button class="btn-delete-item" onclick="deleteSelectedItem()" title="Eliminar seleccionado">✕</button>
 
       <!-- TRAZADO ORTOGONAL -->
-      <button id="pipe-btn" onclick="togglePipeMode()">Trazar Trazo (90°)</button>
-      <span style="font-size: 11px; color:#94a3b8;">Tipo:</span>
+      <button id="pipe-btn" onclick="togglePipeMode()">Trazar Línea (90°)</button>
       <button id="pipe-process" class="btn-pipe-type selected" onclick="setPipeStyle('process')">Tubería Principal</button>
-      <button id="pipe-secondary" class="btn-pipe-type" onclick="setPipeStyle('secondary')">Tubería Auxiliar</button>
-      <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Eléctrica (---)</button>
-      <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Neumática (//)</button>
-      <button id="pipe-hydraulic" class="btn-pipe-type" onclick="setPipeStyle('hydraulic')">Hidráulica (-T-)</button>
-      <button id="pipe-data" class="btn-pipe-type" onclick="setPipeStyle('data')">Bus Datos (-o-)</button>
-      
-      <!-- EDICIÓN -->
-      <button class="btn-delete-item" onclick="deleteSelectedItem()" title="Eliminar seleccionado (o tecla Supr / Delete)">✕ Eliminar</button>
-      <button class="btn-danger" onclick="clearCanvas()">Limpiar</button>
+      <button id="pipe-secondary" class="btn-pipe-type" onclick="setPipeStyle('secondary')">Secundaria</button>
+      <button id="pipe-electric" class="btn-pipe-type" onclick="setPipeStyle('electric')">Eléctrica</button>
+      <button id="pipe-pneumatic" class="btn-pipe-type" onclick="setPipeStyle('pneumatic')">Neumática</button>
     </div>
 
     <!-- PROYECTO Y EXPORTACIÓN -->
     <div class="toolbar-group">
+      <button class="btn-bom" onclick="generateBOM()">📋 Generar BOM</button>
       <button class="btn-project" onclick="saveProjectJSON()">💾 Guardar JSON</button>
       <button class="btn-project" onclick="document.getElementById('load-json-input').click()">📂 Cargar JSON</button>
       <input type="file" id="load-json-input" style="display: none;" accept=".json" onchange="loadProjectJSON(event)">
-      <button class="btn-export" onclick="exportSVG()">Exportar SVG</button>
       <button class="btn-export" onclick="exportPNG()">Exportar PNG</button>
+      <button class="btn-danger" onclick="clearCanvas()">Limpiar Todo</button>
     </div>
   </header>
 
   <!-- CUERPO PRINCIPAL -->
   <div id="main-layout">
-    
     <aside id="sidebar">
       <!-- 1. EQUIPOS DE PROCESO -->
       <div class="category-box">
@@ -356,6 +337,48 @@
     let selectedTarget = null;
     let offset = { x: 0, y: 0 };
 
+    // DICCIONARIO DE COMPONENTES PARA EL BOM
+    const symbolDictionary = {
+      'tank_vertical': 'Estanque Vertical',
+      'tank_horizontal': 'Estanque Horizontal',
+      'tank_jacket': 'Tanque Enchaquetado',
+      'heat_exchanger': 'Intercambiador de Calor',
+      'dest_tower': 'Torre de Destilación',
+      'furnace': 'Horno / Caldera',
+      'cyclone': 'Ciclón Separador',
+      'silo': 'Tolva / Silo',
+      'pump_centrifugal': 'Bomba Centrífuga',
+      'pump_positive': 'Bomba Desplaz. Positivo',
+      'compressor': 'Compresor',
+      'motor_electric': 'Motor Eléctrico',
+      'agitator': 'Agitador / Mezclador',
+      'conveyor': 'Banda Transportadora',
+      'elem_orifice': 'Placa Orificio (FE)',
+      'elem_venturi': 'Tubo Venturi (FE)',
+      'elem_rotameter': 'Rotámetro (FI)',
+      'elem_thermowell': 'Termopozo / RTD (TE)',
+      'elem_gauge': 'Manómetro Local (PG)',
+      'elem_level_glass': 'Mirilla de Nivel (LG)',
+      'elem_steam_trap': 'Trampa de Vapor',
+      'elem_rupture_disc': 'Disco de Ruptura (PSE)',
+      'valve_gate': 'Válvula Manual / Compuerta',
+      'valve_check': 'Válvula de Retención (Check)',
+      'valve_control_diaph': 'Válvula de Control',
+      'valve_solenoid': 'Electroválvula',
+      'valve_3way': 'Válvula de 3 Vías',
+      'valve_relief': 'Válvula de Alivio / Seguridad (PSV)',
+      'act_piston': 'Actuador de Cilindro / Pistón',
+      'valve_butterfly': 'Válvula Mariposa',
+      'inst_field': 'Instrumento en Campo',
+      'inst_panel': 'Instrumento en Panel',
+      'inst_plc': 'Bloque de Control PLC / DCS',
+      'relay_sqrt': 'Relé Extractor de Raíz (FY √)',
+      'relay_sum': 'Relé Sumador (FY Σ)',
+      'relay_ip': 'Convertidor de Señal (FY I/P)',
+      'relay_mult': 'Relé Multiplicador / Razón (FY A/B)',
+      'inst_switch': 'Switch / Interruptor de Alarma'
+    };
+
     // HISTORIAL DESHACER / REHACER
     const undoStack = [];
     const redoStack = [];
@@ -367,27 +390,19 @@
       };
       undoStack.push(state);
       if (undoStack.length > 30) undoStack.shift();
-      redoStack.length = 0; // Limpiar rehacer
+      redoStack.length = 0;
     }
 
     function undoAction() {
       if (undoStack.length === 0) return;
-      const currentState = {
-        symbols: symbolsLayer.innerHTML,
-        pipes: pipesLayer.innerHTML
-      };
-      redoStack.push(currentState);
+      redoStack.push({ symbols: symbolsLayer.innerHTML, pipes: pipesLayer.innerHTML });
       const prevState = undoStack.pop();
       restoreLayers(prevState);
     }
 
     function redoAction() {
       if (redoStack.length === 0) return;
-      const currentState = {
-        symbols: symbolsLayer.innerHTML,
-        pipes: pipesLayer.innerHTML
-      };
-      undoStack.push(currentState);
+      undoStack.push({ symbols: symbolsLayer.innerHTML, pipes: pipesLayer.innerHTML });
       const nextState = redoStack.pop();
       restoreLayers(nextState);
     }
@@ -396,24 +411,20 @@
       clearSelection();
       symbolsLayer.innerHTML = state.symbols;
       pipesLayer.innerHTML = state.pipes;
-      // Re-vincular eventos a todos los elementos restaurados
       symbolsLayer.querySelectorAll('.symbol-group').forEach(setupSymbolEvents);
       pipesLayer.querySelectorAll('.pipe-group').forEach(bindPipeGroupEvents);
     }
 
-    // Atajos de teclado para Undo/Redo y Delete
+    // Atajos de teclado
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
-        if (e.shiftKey) redoAction();
-        else undoAction();
+        if (e.shiftKey) redoAction(); else undoAction();
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
         e.preventDefault();
         redoAction();
       } else if (e.key === 'Delete' || e.key === 'Backspace' || e.key === 'Supr') {
-        if (selectedTarget && document.activeElement.tagName !== 'INPUT') {
-          deleteSelectedItem();
-        }
+        if (selectedTarget && document.activeElement.tagName !== 'INPUT') deleteSelectedItem();
       }
     });
 
@@ -440,13 +451,9 @@
 
     // SELECCIÓN Y BORRADO
     function selectElement(elem) {
-      if (selectedTarget && selectedTarget !== elem) {
-        selectedTarget.classList.remove('is-selected');
-      }
+      if (selectedTarget && selectedTarget !== elem) selectedTarget.classList.remove('is-selected');
       selectedTarget = elem;
-      if (selectedTarget) {
-        selectedTarget.classList.add('is-selected');
-      }
+      if (selectedTarget) selectedTarget.classList.add('is-selected');
     }
 
     function clearSelection() {
@@ -465,18 +472,15 @@
     }
 
     canvas.addEventListener('mousedown', (e) => {
-      if (e.target === canvas && !isPipeMode) {
-        clearSelection();
-      }
+      if (e.target === canvas && !isPipeMode) clearSelection();
     });
 
-    // GENERADOR DE RUTA ORTOGONAL (90°)
     function generateOrthogonalPath(x1, y1, x2, y2) {
       const midX = Math.round(x1 + (x2 - x1) / 2);
       return `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
     }
 
-    // CATÁLOGO DE SÍMBOLOS
+    // AÑADIR SÍMBOLO
     function addSymbol(type) {
       saveState();
       const rect = canvas.getBoundingClientRect();
@@ -485,6 +489,7 @@
 
       const group = document.createElementNS(SVG_NS, 'g');
       group.setAttribute('class', 'symbol-group');
+      group.setAttribute('data-type', type); // Tagging interno para el BOM
       group.setAttribute('transform', `translate(${posX}, ${posY})`);
 
       // 1. EQUIPOS
@@ -633,7 +638,7 @@
         group.appendChild(belt); group.appendChild(c1); group.appendChild(c2);
       }
 
-      // 3. SENSORES PRIMARIOS
+      // 3. ELEMENTOS PRIMARIOS
       else if (type === 'elem_orifice') {
         const l1 = document.createElementNS(SVG_NS, 'line');
         l1.setAttribute('x1', '-6'); l1.setAttribute('y1', '-18'); l1.setAttribute('x2', '-6'); l1.setAttribute('y2', '18');
@@ -958,7 +963,7 @@
     function togglePipeMode() {
       isPipeMode = !isPipeMode;
       pipeBtn.classList.toggle('active-mode', isPipeMode);
-      pipeBtn.textContent = isPipeMode ? 'Modo Trazado 90° (Activo)' : 'Trazar Trazo (90°)';
+      pipeBtn.textContent = isPipeMode ? 'Modo Trazado 90° (Activo)' : 'Trazar Línea (90°)';
       canvas.style.cursor = isPipeMode ? 'cell' : 'crosshair';
       activePipeGroup = null;
       pipeStartPoint = null;
@@ -1003,7 +1008,6 @@
 
         const initialPath = generateOrthogonalPath(pos.x, pos.y, pos.x, pos.y);
 
-        // Trazo invisible de selección
         const hitArea = document.createElementNS(SVG_NS, 'path');
         hitArea.setAttribute('class', 'pipe-hit-area');
         hitArea.setAttribute('d', initialPath);
@@ -1013,7 +1017,6 @@
         hitArea.setAttribute('stroke-linejoin', 'round');
         hitArea.setAttribute('cursor', 'pointer');
 
-        // Trazo visible
         const visPath = document.createElementNS(SVG_NS, 'path');
         visPath.setAttribute('class', 'pipe-visible');
         visPath.setAttribute('d', initialPath);
@@ -1036,24 +1039,13 @@
           visPath.setAttribute('stroke', '#f87171');
           visPath.setAttribute('stroke-width', '2');
           visPath.setAttribute('stroke-dasharray', '14,4,2,4');
-        } else if (pipeType === 'hydraulic') {
-          visPath.setAttribute('stroke', '#fb923c');
-          visPath.setAttribute('stroke-width', '2');
-          visPath.setAttribute('stroke-dasharray', '16,6,4,6');
-        } else if (pipeType === 'data') {
-          visPath.setAttribute('stroke', '#a78bfa');
-          visPath.setAttribute('stroke-width', '2');
-          visPath.setAttribute('stroke-dasharray', '8,6');
         }
 
         activePipeGroup.appendChild(visPath);
         activePipeGroup.appendChild(hitArea);
         pipesLayer.appendChild(activePipeGroup);
-
         bindPipeGroupEvents(activePipeGroup);
-
       } else {
-        // Fijar el final
         selectElement(activePipeGroup);
         activePipeGroup = null;
         pipeStartPoint = null;
@@ -1070,7 +1062,114 @@
       }
     }
 
-    // GUARDAR Y CARGAR PROYECTO (JSON LOCAL)
+    // --- MÓDULO BOM (BILL OF MATERIALS) ---
+    function generateBOM() {
+      clearSelection();
+      const items = {};
+      const elements = symbolsLayer.querySelectorAll('.symbol-group');
+      
+      elements.forEach(el => {
+        const type = el.getAttribute('data-type');
+        const name = symbolDictionary[type] || 'Componente Genérico';
+        
+        // Extracción inteligente de Tags leyendo los textos SVG
+        const textNodes = el.querySelectorAll('text');
+        const rawTexts = Array.from(textNodes).map(t => t.textContent).filter(t => !['√', 'Σ', 'I/P', 'A/B', 'M', 'S'].includes(t));
+        const tag = rawTexts.length > 0 ? rawTexts.join('-') : 'S/N';
+        
+        if (!items[name]) {
+          items[name] = { count: 0, tags: [] };
+        }
+        items[name].count++;
+        items[name].tags.push(tag);
+      });
+      
+      const pipeCount = pipesLayer.querySelectorAll('.pipe-group').length;
+
+      let html = `
+        <div class="bom-modal" id="bom-modal-container">
+          <div class="bom-content">
+            <div class="bom-header">
+              <h2>📋 Lista de Materiales (BOM) P&ID</h2>
+              <span class="close-bom" onclick="document.getElementById('bom-modal-container').remove()">&times;</span>
+            </div>
+            <div class="bom-table-container">
+              <table class="bom-table">
+                <thead>
+                  <tr>
+                    <th style="width: 10%; text-align: center;">Cant.</th>
+                    <th style="width: 40%;">Tipo de Componente</th>
+                    <th style="width: 50%;">Tags / Identificadores</th>
+                  </tr>
+                </thead>
+                <tbody>`;
+      
+      for(let key in items) {
+        html += `<tr>
+                  <td style="text-align: center; font-weight: bold; color: #38bdf8;">${items[key].count}</td>
+                  <td>${key}</td>
+                  <td style="color: #94a3b8;">${items[key].tags.join(', ')}</td>
+                 </tr>`;
+      }
+      
+      html += `<tr>
+                <td style="text-align: center; font-weight: bold; color: #38bdf8;">${pipeCount}</td>
+                <td>Tramos de Tubería / Señal</td>
+                <td style="color: #94a3b8;">-</td>
+               </tr>`;
+               
+      html += `  </tbody>
+              </table>
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+              <button class="btn-export" onclick="exportBOMCSV()">⬇️ Descargar a Excel (CSV)</button>
+            </div>
+          </div>
+        </div>`;
+        
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      document.body.appendChild(div.firstElementChild);
+    }
+
+    function exportBOMCSV() {
+      // Usamos \uFEFF para que Excel reconozca el UTF-8 (Tildes y eñes)
+      let csvContent = "\uFEFFCantidad,Tipo de Componente,Tags / Identificadores\n";
+      
+      const elements = symbolsLayer.querySelectorAll('.symbol-group');
+      const items = {};
+      
+      elements.forEach(el => {
+        const type = el.getAttribute('data-type');
+        const name = symbolDictionary[type] || 'Componente Genérico';
+        const textNodes = el.querySelectorAll('text');
+        const rawTexts = Array.from(textNodes).map(t => t.textContent).filter(t => !['√', 'Σ', 'I/P', 'A/B', 'M', 'S'].includes(t));
+        const tag = rawTexts.length > 0 ? rawTexts.join('-') : 'S/N';
+        
+        if (!items[name]) items[name] = { count: 0, tags: [] };
+        items[name].count++;
+        items[name].tags.push(tag);
+      });
+      
+      for(let key in items) {
+        // Envolvemos en comillas por si hay comas en los tags
+        csvContent += `${items[key].count},"${key}","${items[key].tags.join(', ')}"\n`;
+      }
+      
+      const pipeCount = pipesLayer.querySelectorAll('.pipe-group').length;
+      csvContent += `${pipeCount},"Tramos de Tubería / Señal","-"\n`;
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "Lista_Materiales_BOM.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // GUARDAR Y CARGAR PROYECTO (JSON)
     function saveProjectJSON() {
       clearSelection();
       const projectData = {
@@ -1079,7 +1178,6 @@
         symbolsHTML: symbolsLayer.innerHTML,
         pipesHTML: pipesLayer.innerHTML
       };
-
       const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1092,27 +1190,18 @@
     function loadProjectJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const data = JSON.parse(e.target.result);
           if (data.symbolsHTML !== undefined && data.pipesHTML !== undefined) {
             saveState();
-            restoreLayers({
-              symbols: data.symbolsHTML,
-              pipes: data.pipesHTML
-            });
-            alert('¡Proyecto cargado exitosamente!');
-          } else {
-            alert('Formato de archivo JSON no válido para P&ID Studio.');
+            restoreLayers({ symbols: data.symbolsHTML, pipes: data.pipesHTML });
           }
-        } catch (err) {
-          alert('Error al leer el archivo JSON: ' + err.message);
-        }
+        } catch (err) { alert('Error al leer JSON'); }
       };
       reader.readAsText(file);
-      event.target.value = ''; // Reset input
+      event.target.value = '';
     }
 
     function exportSVG() {
